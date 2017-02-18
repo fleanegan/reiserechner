@@ -1,38 +1,22 @@
 package com.example.fleanegan.reiserechner;
 
-import android.animation.ObjectAnimator;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-import android.support.annotation.StringDef;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.ActionBarOverlayLayout;
-import android.support.v7.widget.ActionMenuView;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import java.util.Random;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -40,6 +24,10 @@ public class MainActivity extends AppCompatActivity
     TextView putResults;
     Integer userId = 0;
     DrawerLayout drawer;
+    NavigationView navigationView;
+    LinearLayout addUserLayout;
+    LinearLayout addUserInterfaceLayout;
+    View headerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,12 +42,12 @@ public class MainActivity extends AppCompatActivity
         this.drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        this.navigationView = (NavigationView) findViewById(R.id.nav_view);
+        this.navigationView.setNavigationItemSelectedListener(this);
         this.addButtonsAllOverThePlaace();
     }
 
-    //maybe used to get the navdrawer a nicer height
+    // used to get the navdrawer a nicer height
     public int getStatusBarHeight() {
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -68,6 +56,7 @@ public class MainActivity extends AppCompatActivity
         }
         return result;
     }
+
 
     private void modifyNavDrawer(String name) {
         if (!name.equals("")) {
@@ -79,42 +68,22 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void addUser() {
-        final AlertDialog.Builder buildAddUser = new AlertDialog.Builder(this);
-        final EditText nameInput = new EditText(this);
-        MainActivity.this.drawer.closeDrawer(Gravity.LEFT);
-
-        buildAddUser.setTitle("Enter name")
-                .setView(nameInput)
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                })
-                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        MainActivity.this.modifyNavDrawer(nameInput.getText().toString());
-                    }
-                });
-
-        AlertDialog addUser = buildAddUser.create();
-        addUser.show();
-
+        Animations animator = new Animations();
+        animator.collapse(MainActivity.this.addUserLayout);
+        this.addUserInterfaceLayout = (LinearLayout) this.headerView.findViewById(R.id.add_user_interface);
+        animator.expand(addUserInterfaceLayout, 125);
+        //MainActivity.this.modifyNavDrawer(nameInput.getText().toString());
     }
+
 
     private void addButtonsAllOverThePlaace() {
         LinearLayout buttonBox = (LinearLayout) findViewById(R.id.button_container);
-        Button testButton = new Button(this);
-        testButton.setText("this is a dummy button");
-        testButton.setWidth(96);
-        testButton.setHeight(96);
-        buttonBox.addView(testButton);
 
+        //ScrollViewStuff
         LinearLayout verticalFill1 = new LinearLayout(this);
-
         final HorizontalScrollView scrollView = new HorizontalScrollView(this);
 
+        //Put the stupid buttons in.
         for (int i = 0; i < 20; i++) {
             final Button tempButton = new Button(this);
             final Integer direction = (int) (Math.random() * 19) + 1;
@@ -128,22 +97,21 @@ public class MainActivity extends AppCompatActivity
                 }
             });
             verticalFill1.addView(tempButton);
-
         }
 
         //locate the header
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        View headerview = navigationView.getHeaderView(0);
-        LinearLayout addUserLayout = (LinearLayout) headerview.findViewById(R.id.add_user);
-        Log.d("ADDUSER", "Height = " + addUserLayout.getHeight());
-        addUserLayout.setOnClickListener(new View.OnClickListener() {
+        this.headerView = this.navigationView.getHeaderView(0);
+        this.addUserLayout = (LinearLayout) headerView.findViewById(R.id.add_user);
+        Log.d("ADDUSER", "Height = " + this.addUserLayout.getHeight());
+        this.addUserLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 MainActivity.this.addUser();
             }
         });
 
-        TextView placeHeader = (TextView) headerview.findViewById(R.id.adapt_to_status_bar);
+        //this resized the dummy TextView in order to push the green header pic to the right pos.
+        TextView placeHeader = (TextView) headerView.findViewById(R.id.adapt_to_status_bar);
         placeHeader.getLayoutParams().height = this.getStatusBarHeight();
         Log.d("STATUSBAR", "Height = " + this.getStatusBarHeight());
         placeHeader.setHeight(this.getStatusBarHeight());
@@ -156,6 +124,22 @@ public class MainActivity extends AppCompatActivity
         buttonBox.addView(scrollView);
 
 
+        //manage the user_add_interface
+        Button cancelUserAdd = (Button) this.headerView.findViewById(R.id.add_user_interface_cancel);
+        cancelUserAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Animations animator = new Animations();
+                animator.expand(MainActivity.this.addUserLayout, 80);
+
+                AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
+                anim.setDuration(100);
+                MainActivity.this.addUserInterfaceLayout.startAnimation(anim);
+                MainActivity.this.addUserInterfaceLayout.setVisibility(View.INVISIBLE);
+            }
+        });
+
+
     }
 
     @Override
@@ -166,28 +150,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
