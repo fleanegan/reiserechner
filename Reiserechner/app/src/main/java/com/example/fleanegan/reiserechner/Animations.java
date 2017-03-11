@@ -1,6 +1,9 @@
 package com.example.fleanegan.reiserechner;
 
+import android.content.res.Resources;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.LinearLayout;
@@ -12,16 +15,14 @@ import android.widget.LinearLayout;
 public class Animations {
     static Integer factor = 3;
 
-    public static void collapse(final View v) {
+    public static void collapse(final View v, final Integer f) {
         final int initialHeight = v.getMeasuredHeight();
-
         Animation a = new Animation() {
             @Override
             protected void applyTransformation(float interpolatedTime, Transformation t) {
                 if (interpolatedTime == 1) {
-                    v.setVisibility(View.GONE);
                 } else {
-                    v.getLayoutParams().height = initialHeight - (int) (initialHeight * interpolatedTime);
+                    v.getLayoutParams().height = initialHeight - (int) ((initialHeight - f) * interpolatedTime);
                     v.requestLayout();
                 }
             }
@@ -38,7 +39,7 @@ public class Animations {
     }
 
 
-    public static void expand(final View v, int dest) {
+    public static void expand(final View v, int dest, final int beg) {
         final Integer targetHeight = dest;
 
         v.setVisibility(View.INVISIBLE);
@@ -50,7 +51,7 @@ public class Animations {
             protected void applyTransformation(float interpolatedTime, Transformation t) {
                 v.getLayoutParams().height = interpolatedTime == 1
                         ? LinearLayout.LayoutParams.WRAP_CONTENT
-                        : (int) (targetHeight * interpolatedTime);
+                        : (int) ((targetHeight - beg) * interpolatedTime) + beg;
                 v.requestLayout();
             }
 
@@ -65,5 +66,26 @@ public class Animations {
         v.startAnimation(a);
     }
 
+
+    public static void fade(final View v, String inOrOut) throws Resources.NotFoundException {
+        if (inOrOut == "out") {
+            Animation fadeOut = new AlphaAnimation(1, 0);
+            fadeOut.setInterpolator(new AccelerateInterpolator());
+            fadeOut.setDuration(1000);
+            v.setAnimation(fadeOut);
+            v.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                }
+            }, 500);
+            v.setVisibility(View.INVISIBLE);
+        } else {
+            v.setVisibility(View.VISIBLE);
+            Animation fadeIn = new AlphaAnimation(0, 1);
+            fadeIn.setInterpolator(new AccelerateInterpolator());
+            fadeIn.setDuration(100);
+            v.setAnimation(fadeIn);
+        }
+    }
 
 }
