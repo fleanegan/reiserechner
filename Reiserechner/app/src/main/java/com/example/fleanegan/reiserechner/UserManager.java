@@ -7,7 +7,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,9 +49,6 @@ public class UserManager extends Fragment {
         Fragment fragment = new UserManager();
 
         fragment.setArguments(alreadyDone);
-
-        System.out.println("calling refresh");
-
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.replace(R.id.button_container, fragment);
         ft.commit();
@@ -82,11 +78,9 @@ public class UserManager extends Fragment {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (!hasFocus) {
-                    System.out.println("iprice lost focus");
                     InputMethodManager imm = (InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 } else {
-                    System.out.println("iprice has focus");
                     //revoke keyboard
                     ((InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
                 }
@@ -99,11 +93,9 @@ public class UserManager extends Fragment {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (!hasFocus) {
-                    System.out.println("iname lost focus");
                     InputMethodManager imm = (InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 } else {
-                    System.out.println("iname has focus");
                     //revoke keyboard
                     ((InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
                     itemName.requestFocus();
@@ -140,7 +132,6 @@ public class UserManager extends Fragment {
                     addNewItem.setText("close");
                     collapsibleLayout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
                     int height = collapsibleLayout.getMeasuredHeight();
-                    Log.d("HEIGHT", "" + height);
                     animations.expand(collapsibleLayout, height, 0);
                     itemName.requestFocus();
                 } else {
@@ -173,7 +164,6 @@ public class UserManager extends Fragment {
 
     public void initialize() {
 
-        System.out.println("initializing" + testUser.getName());
         this.nameSpace = (TextView) getView().findViewById(R.id.user_manager_name_space);
         this.saldo = (TextView) getView().findViewById(R.id.user_manager_saldo);
         this.total = (TextView) getView().findViewById(R.id.user_manager_total);
@@ -203,15 +193,9 @@ public class UserManager extends Fragment {
     }
 
     public void manageTheSaldo() {
-        System.out.println("total sum: " + User.totalAmount + " rdr: " + User.totalAmount.setScale(2, BigDecimal.ROUND_HALF_EVEN));
         BigDecimal everybodyShouldPay = User.totalAmount.divide(new BigDecimal(User.numberOfUsers), 2, BigDecimal.ROUND_HALF_EVEN);
         everybodyShouldPay = everybodyShouldPay.setScale(2, BigDecimal.ROUND_HALF_EVEN);
         BigDecimal saldo = everybodyShouldPay.subtract(this.testUser.getTotalDispense());
-        System.out.println(testUser.getName() + " payed " + testUser.getTotalDispense());
-        System.out.println("we've got " + User.numberOfUsers + " users.");
-        System.out.println("total dispenses: " + User.totalAmount);
-        System.out.println("everybodyShouldPay: " + everybodyShouldPay);
-        System.out.println(this.testUser.getName() + " should pay: " + saldo);
         if (saldo.toBigInteger().doubleValue() > 0) this.saldo.setTextColor(Color.RED);
         else this.saldo.setTextColor(Color.GREEN);
 

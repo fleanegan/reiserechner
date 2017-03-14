@@ -4,20 +4,4 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:overScrollMode="never"
-    android:background="#BDBDBD"
-    android:id="@+id/weird_container">
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/weird_container_scrollable_container" />
-
-    </ScrollView>
-
-</LinearLayout>
+    android:background="#E0E0E0" />

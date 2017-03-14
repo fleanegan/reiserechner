@@ -13,12 +13,14 @@ public class Serializer implements Serializable {
     private ArrayList<User> userArrayList = new ArrayList<>();
     private BigDecimal saveTheAmount;
     private int numberOfUsers;
+    private ArrayList<Item> itemList;
 
 
     public void addUser(ArrayList<User> users, BigDecimal saveTheAmount) {
         this.userArrayList = users;
         this.saveTheAmount = saveTheAmount;
         this.numberOfUsers = User.numberOfUsers;
+        this.itemList = User.itemList;
     }
 
 
@@ -32,5 +34,9 @@ public class Serializer implements Serializable {
 
     public int getNumberOfUsers() {
         return this.numberOfUsers;
+    }
+
+    public ArrayList<Item> getItemList() {
+        return this.itemList;
     }
 }

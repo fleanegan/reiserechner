@@ -15,13 +15,10 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -35,11 +32,8 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity {
 
     Integer userId = 0;
     DrawerLayout drawer;
@@ -91,11 +85,16 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         this.navigationView = (NavigationView) findViewById(R.id.nav_view);
-        this.navigationView.setNavigationItemSelectedListener(this);
-        this.addButtonsAllOverThePlaace();
+        this.addButtonsAllOverThePlace();
 
         this.saveTo = new File((this.getApplicationContext().getFileStreamPath(this.serFileName).getPath()));
         this.deserialize(this.saveTo);
+    }
+
+    @Override
+    public void onStart() {
+        this.pushUserToFragment(-1, false);
+        super.onStart();
     }
 
     //maybe used to get the navdrawer a nicer height
@@ -108,46 +107,12 @@ public class MainActivity extends AppCompatActivity
         return result;
     }
 
-    private void addButtonsAllOverThePlaace() {
+    private void addButtonsAllOverThePlace() {
 
         NavigationView nav = (NavigationView) findViewById(R.id.nav_view);
         LinearLayout header = (LinearLayout) nav.findViewById(R.id.test_nav_menu_alternative);
         this.headerView = header.getChildAt(0);
         this.addUserInterfaceLayout = (LinearLayout) this.headerView.findViewById(R.id.add_user_interface);
-
-        LinearLayout buttonBox = (LinearLayout) findViewById(R.id.button_container);
-        Button testButton = new Button(this);
-        testButton.setText("this is a dummy button");
-        testButton.setWidth(96);
-        testButton.setHeight(96);
-        buttonBox.addView(testButton);
-
-        LinearLayout verticalFill1 = new LinearLayout(this);
-
-        final HorizontalScrollView scrollView = new HorizontalScrollView(this);
-
-        for (int i = 0; i < 20; i++) {
-            final Button tempButton = new Button(this);
-            final Integer direction = (int) (Math.random() * 19) + 1;
-            tempButton.setText(String.valueOf(direction) + "\n" + (1 + i));
-            tempButton.setLayoutParams(new DrawerLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            tempButton.setWidth(64);
-            tempButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    scrollView.smoothScrollTo(tempButton.getMeasuredWidth() * (direction - 1), 0);
-                }
-            });
-            verticalFill1.addView(tempButton);
-
-        }
-
-        scrollView.setLayoutParams(new DrawerLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        scrollView.setHorizontalScrollBarEnabled(false);
-        scrollView.addView(verticalFill1);
-        buttonBox.addView(scrollView);
-
-
         //locate the header
         this.addUserLayout = (LinearLayout) headerView.findViewById(R.id.add_user);
         this.addUserLayout.setOnClickListener(new View.OnClickListener() {
@@ -184,9 +149,6 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    public void pushHome(View view) {
-
-    }
 
     private void closeManageUserAddDialog() {
         //collapses keyboard
@@ -230,36 +192,8 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            drawer.openDrawer(GravityCompat.START);
         }
-    }
-
-    public ArrayList<ArrayList<Item>> getDateSortedUserList() {
-        ArrayList<ArrayList<Item>> container = new ArrayList<>();
-        ArrayList<Item> sortedByDate = new ArrayList<>();
-        sortedByDate = User.itemList;
-        Collections.sort(sortedByDate, new Comparator<Item>() {
-                    @Override
-                    public int compare(Item o1, Item o2) {
-                        return o1.getDate().compareTo(o2.getDate());
-                    }
-                }
-        );
-        int day = -1;
-        ArrayList holderList = new ArrayList();
-        for (Item i : sortedByDate) {
-            if (day == i.getDate().getDay()) {
-                //append item to same-day-list
-                holderList.add(i);
-            } else {
-                //open new list
-
-            }
-            System.out.println("day: " + day);
-
-            day = i.getDate().getDay();
-        }
-        return new ArrayList<ArrayList<Item>>();
     }
 
 
@@ -273,7 +207,7 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onClick(View v) {
                     LinearLayout test = (LinearLayout) myView.getParent();
-                    pushUserToFragment(test.indexOfChild(myView));
+                    pushUserToFragment(test.indexOfChild(myView), true);
                     drawer.closeDrawer(Gravity.LEFT);
                 }
             });
@@ -326,6 +260,9 @@ public class MainActivity extends AppCompatActivity
             saferDeletion = -1;
             saferDeletionTextView = null;
         }
+        for (Item i : this.userList.get(id).getBoughtItems()) {
+            User.itemList.remove(i);
+        }
         User.totalAmount = User.totalAmount.subtract(this.userList.get(id).getTotalDispense());
         this.userList.remove(id);
         User.numberOfUsers--;
@@ -334,26 +271,22 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-        this.cancelUserAdd.performClick();
-        this.pushUserToFragment(id);
-
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
+    public void pushHome(View view) {
+        this.pushUserToFragment(-1, false);
+        this.drawer.closeDrawer(GravityCompat.START);
     }
 
-    public void pushUserToFragment(Integer id) {
+    public void pushUserToFragment(Integer id, Boolean isUser) {
         Bundle alreadyDone = new Bundle();
         neutralize();
-        alreadyDone.putSerializable("user", this.userList.get(id));
-        alreadyDone.putBoolean("leaveOpen", false);
-        Fragment fragment = new UserManager();
+        Fragment fragment;
+        if (isUser) {
+            alreadyDone.putSerializable("user", this.userList.get(id));
+            alreadyDone.putBoolean("leaveOpen", false);
+            fragment = new UserManager();
+        } else {
+            fragment = new HomeManager();
+        }
         LinearLayout buttonBox = (LinearLayout) findViewById(R.id.button_container);
         buttonBox.removeAllViewsInLayout();
         fragment.setArguments(alreadyDone);
@@ -415,6 +348,7 @@ public class MainActivity extends AppCompatActivity
 
         User.totalAmount = serializer.getSaveTheAmount();
         User.numberOfUsers = serializer.getNumberOfUsers();
+        if (serializer.getItemList() != null) User.itemList = serializer.getItemList();
 
         for (User u : this.userList) {
             Log.d("DE-SERIALIZATION", "accessed");

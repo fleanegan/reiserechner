@@ -111,7 +111,6 @@ public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.
             removeItem.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                 @Override
                 public void onFocusChange(View v, boolean hasFocus) {
-                    System.out.println("deleteView has lost focus");
                     if (!hasFocus) {
                         saferDeletionView = null;
                         ((TextView) v).setTextColor(Color.parseColor("#00ff0000"));
@@ -151,7 +150,6 @@ public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.
     }
 
     public void neutralize() {
-        System.out.println("cardneutralizer called");
         if (this.saferDeletionView != null) {
             this.saferDeletionView.setTextColor(Color.parseColor("#00ff0000"));
             this.saferDeletionView = null;
