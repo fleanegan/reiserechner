@@ -2,7 +2,6 @@ package com.example.fleanegan.reiserechner;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -16,13 +15,6 @@ public class Item implements Serializable {
     private String description = "";
     private Date timeStamp;
 
-    public Item(String name, String price, String description) {
-        this.name = name;
-        this.price = this.price.add(new BigDecimal(price));
-        this.description = description;
-        this.timeStamp = new Date();
-    }
-
     public Item(String name, String price) {
         this.name = name;
         this.price = this.price.add(new BigDecimal(price));
@@ -34,17 +26,28 @@ public class Item implements Serializable {
         return this.price;
     }
 
+    public void setPrice(String newPrice) {
+        this.price = new BigDecimal(newPrice);
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
     public String getName() {
         return this.name;
     }
 
-    public Date getDate() {
-        return this.timeStamp;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getTimeStamp() {
-        return new SimpleDateFormat("dd.MM.yyyy, HH:mm").format(this.timeStamp);
+    public Date getDate() {
+        return this.timeStamp;
     }
 
 }

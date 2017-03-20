@@ -7,6 +7,8 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
@@ -55,37 +57,40 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         TextView header = (TextView) collapsedDay.findViewById(R.id.home_header);
         header.setText(new SimpleDateFormat("dd.MM.yyyy").format(this.sortedArrayList.get(position).get(0).getDate()));
 
+        TextView subTotal = (TextView) collapsedDay.findViewById(R.id.home_header_sub_total);
+        BigDecimal subTotalValue = new BigDecimal(0);
+
         final LinearLayout container = (LinearLayout) collapsedDay.findViewById(R.id.home_day_container);
         LinearLayout collapser = (LinearLayout) collapsedDay.findViewById(R.id.home_collapser);
         final TextView schraegStrich = (TextView) collapser.findViewById(R.id.schraegStrich);
-        schraegStrich.setText("/");
+        schraegStrich.setText("\\");
         collapser.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (schraegStrich.getText().toString().equals("/")) {
+                Animations animations = new Animations();
+                if (schraegStrich.getText().toString().equals("\\")) {
                     container.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
                     int height = container.getMeasuredHeight();
-                    Animations animations = new Animations();
                     animations.expand(container, height, 0);
-                    schraegStrich.setText("\\");
-                } else {
-                    Animations animations = new Animations();
-                    animations.collapse(container, 0);
                     schraegStrich.setText("/");
+                } else {
+                    animations.collapse(container, 0);
+                    schraegStrich.setText("\\");
                 }
             }
         });
 
         for (Item i : this.sortedArrayList.get(position)) {
-            LinearLayout boughtItem = (LinearLayout) LayoutInflater.from(parent.getContext())
+            LinearLayout boughtItem = (LinearLayout) LayoutInflater.from(this.parent.getContext())
                     .inflate(R.layout.home_day_sub, this.parent, false);
             TextView itemName = (TextView) boughtItem.findViewById(R.id.home_day_sub_text_view);
             itemName.setText(i.getName());
             TextView itemPrice = (TextView) boughtItem.findViewById(R.id.home_day_sub_price);
             itemPrice.setText(String.valueOf(i.getPrice()));
             container.addView(boughtItem);
-
+            subTotalValue = subTotalValue.add(i.getPrice());
         }
+        subTotal.setText(String.valueOf(subTotalValue.setScale(2, RoundingMode.HALF_EVEN)));
         holder.homeLayout.addView(collapsedDay);
     }
 

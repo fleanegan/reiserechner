@@ -30,13 +30,21 @@ public class User implements Serializable {
     public void addItem(Item item) {
         this.boughtItems.add(item);
         User.itemList.add(item);
-        this.totalDispense = this.totalDispense.add(item.getPrice());
-        User.totalAmount = User.totalAmount.add(item.getPrice());
+        this.manageBalance(item, true);
+    }
+
+    public void manageBalance(Item item, boolean increment) {
+        if (increment) {
+            this.totalDispense = this.totalDispense.add(item.getPrice());
+            User.totalAmount = User.totalAmount.add(item.getPrice());
+        } else {
+            User.totalAmount = User.totalAmount.subtract(item.getPrice());
+            this.totalDispense = this.totalDispense.subtract(item.getPrice());
+        }
     }
 
     public void removeItem(int id) {
-        User.totalAmount = User.totalAmount.subtract(this.boughtItems.get(id).getPrice());
-        this.totalDispense = this.totalDispense.subtract(this.boughtItems.get(id).getPrice());
+        manageBalance(this.boughtItems.get(id), false);
         User.itemList.remove(this.boughtItems.get(id));
         this.boughtItems.remove(id);
     }

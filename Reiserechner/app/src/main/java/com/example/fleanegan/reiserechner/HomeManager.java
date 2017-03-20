@@ -9,9 +9,11 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -64,11 +66,25 @@ public class HomeManager extends Fragment {
 
     }
 
+    public void launchProjectManager() {
+        ((MainActivity) getActivity()).pushUserToFragment(-2);
+    }
 
     public void initialize() {
         this.total = (TextView) getView().findViewById(R.id.home_total);
-        this.total.setText(String.valueOf(User.totalAmount));
+        if (User.totalAmount != null)
+            this.total.setText(String.valueOf(User.totalAmount.setScale(2, RoundingMode.HALF_EVEN)));
         final DrawerLayout drawerLayout = (DrawerLayout) this.getActivity().findViewById(R.id.drawer_layout);
+        Button manageProjects = (Button) getView().findViewById(R.id.home_manage_projects);
+        manageProjects.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchProjectManager();
+            }
+        });
+
+
+        this.mAdapter.notifyDataSetChanged();
         if (User.numberOfUsers == 0) {
             final android.os.Handler handler = new android.os.Handler();
             handler.postDelayed(new Runnable() {

@@ -32,9 +32,16 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="50sp"
-            android:textSize="25sp"
+            android:textSize="22sp"
             android:gravity="center_vertical"
             android:id="@+id/home_header" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginRight="18dp"
+            android:id="@+id/home_header_sub_total" />
 
 
     </LinearLayout>

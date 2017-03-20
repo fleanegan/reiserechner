@@ -1,6 +1,7 @@
 package com.example.fleanegan.reiserechner;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -41,18 +42,16 @@ public class UserManager extends Fragment {
 
 
     public void refresh() {
-
         Bundle alreadyDone = new Bundle();
-        alreadyDone.putSerializable("user", testUser);
-        alreadyDone.putBoolean("leaveOpen", !isCollapsed);
+        alreadyDone.putSerializable("user", this.testUser);
+        alreadyDone.putBoolean("leaveOpen", !this.isCollapsed);
 
         Fragment fragment = new UserManager();
-
         fragment.setArguments(alreadyDone);
+
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.replace(R.id.button_container, fragment);
         ft.commit();
-
     }
 
 
@@ -73,8 +72,8 @@ public class UserManager extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle onSavedInstanceState) {
 
-        itemPrice = (EditText) getView().findViewById(R.id.user_manager_price);
-        itemPrice.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        this.itemPrice = (EditText) getView().findViewById(R.id.user_manager_price);
+        this.itemPrice.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (!hasFocus) {
@@ -88,8 +87,8 @@ public class UserManager extends Fragment {
         });
 
 
-        itemName = (EditText) getView().findViewById(R.id.user_manager_item);
-        itemName.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        this.itemName = (EditText) getView().findViewById(R.id.user_manager_item);
+        this.itemName.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (!hasFocus) {
@@ -103,20 +102,20 @@ public class UserManager extends Fragment {
             }
         });
 
-        mRecyclerView = (RecyclerView) getView().findViewById(R.id.user_manager_recycler_view);
+        this.mRecyclerView = (RecyclerView) getView().findViewById(R.id.user_manager_recycler_view);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
-        mRecyclerView.setHasFixedSize(true);
+        this.mRecyclerView.setHasFixedSize(true);
 
         // use a linear layout manager
-        mLayoutManager = new LinearLayoutManager(this.getContext());
-        mRecyclerView.setLayoutManager(mLayoutManager);
+        this.mLayoutManager = new LinearLayoutManager(this.getContext(), LinearLayoutManager.HORIZONTAL, false);
+        this.mRecyclerView.setLayoutManager(this.mLayoutManager);
 
 
         // specify an adapter (see also next example)
-        mAdapter = new UserManagerAdapter(this.testUser, this);
-        mRecyclerView.setAdapter(mAdapter);
+        this.mAdapter = new UserManagerAdapter(this.testUser, this);
+        this.mRecyclerView.setAdapter(this.mAdapter);
 
 
         final LinearLayout collapsibleLayout = (LinearLayout) getView().findViewById(R.id.user_manager_collapsible);
@@ -124,23 +123,23 @@ public class UserManager extends Fragment {
 
         this.addNewItem = (TextView) getView().findViewById(R.id.user_manager_collapse);
 
-        addNewItem.setOnClickListener(new View.OnClickListener() {
+        this.addNewItem.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                if (isCollapsed) {
-                    addNewItem.setText("close");
+                if (UserManager.this.isCollapsed) {
+                    UserManager.this.addNewItem.setText("close");
                     collapsibleLayout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
                     int height = collapsibleLayout.getMeasuredHeight();
                     animations.expand(collapsibleLayout, height, 0);
-                    itemName.requestFocus();
+                    UserManager.this.itemName.requestFocus();
                 } else {
                     animations.collapse(collapsibleLayout, 0);
-                    addNewItem.setText("add new item");
-                    nameSpace.requestFocus();
+                    UserManager.this.addNewItem.setText("add new item");
+                    UserManager.this.nameSpace.requestFocus();
                 }
-                isCollapsed = !isCollapsed;
-                addNewItem.setGravity(Gravity.CENTER);
+                UserManager.this.isCollapsed = !UserManager.this.isCollapsed;
+                UserManager.this.addNewItem.setGravity(Gravity.CENTER);
             }
         });
 
@@ -169,8 +168,8 @@ public class UserManager extends Fragment {
         this.total = (TextView) getView().findViewById(R.id.user_manager_total);
 
         this.saldo.setText(String.valueOf(0));
-        this.nameSpace.setText(testUser.getName());
-        this.total.setText(String.valueOf(testUser.getTotalDispense()));
+        this.nameSpace.setText(this.testUser.getName());
+        this.total.setText(String.valueOf(this.testUser.getTotalDispense()));
 
         if (this.leaveOpen) {
             LinearLayout collapsibleLayout = (LinearLayout) getView().findViewById(R.id.user_manager_collapsible);
@@ -184,11 +183,12 @@ public class UserManager extends Fragment {
     }
 
     public void surveiller() {
-        if (!itemPrice.getText().toString().equals("") && !itemName.getText().toString().equals("")) {
-            testUser.addItem(new Item(itemName.getText().toString(), itemPrice.getText().toString()));
-            mAdapter.notifyDataSetChanged();
-            itemPrice.setText("");
-            itemName.setText("");
+        if (!itemPrice.getText().toString().equals("") && !this.itemName.getText().toString().equals("")) {
+            this.testUser.addItem(new Item(this.itemName.getText().toString(), this.itemPrice.getText().toString()));
+            this.mAdapter.notifyDataSetChanged();
+            this.itemPrice.setText("");
+            this.itemName.setText("");
+            this.manageTheSaldo();
         }
     }
 
@@ -196,17 +196,47 @@ public class UserManager extends Fragment {
         BigDecimal everybodyShouldPay = User.totalAmount.divide(new BigDecimal(User.numberOfUsers), 2, BigDecimal.ROUND_HALF_EVEN);
         everybodyShouldPay = everybodyShouldPay.setScale(2, BigDecimal.ROUND_HALF_EVEN);
         BigDecimal saldo = everybodyShouldPay.subtract(this.testUser.getTotalDispense());
+        BigDecimal total = this.testUser.getTotalDispense();
+        total.setScale(2, BigDecimal.ROUND_HALF_EVEN);
+
         if (saldo.toBigInteger().doubleValue() > 0) this.saldo.setTextColor(Color.RED);
         else this.saldo.setTextColor(Color.GREEN);
 
+        this.total.setText((total.setScale(2, BigDecimal.ROUND_HALF_EVEN)).toString());
         this.saldo.setText((saldo.setScale(2, BigDecimal.ROUND_HALF_EVEN)).multiply(new BigDecimal(-1)).toString());
     }
 
     @Override
     public void onStop() {
         Bundle sendBack = new Bundle();
-        sendBack.putSerializable("user", testUser);
+        sendBack.putSerializable("user", this.testUser);
 
         super.onStop();
+    }
+
+    public void editItem(Item item, int position) {
+        Intent secondaryActivity = new Intent(getActivity(), EditItem.class);
+        secondaryActivity.putExtra("item", item);
+        secondaryActivity.putExtra("position", position);
+        startActivityForResult(secondaryActivity, 1);
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        System.out.println("banana " + requestCode);
+        if (requestCode == 1) {
+            Item item = (Item) data.getExtras().get("item");
+            int position = (int) data.getExtras().get("position");
+            testUser.manageBalance(testUser.getBoughtItems().get(position), false);
+            User.itemList.set(User.itemList.indexOf(testUser.getBoughtItems().get(position)), item);
+            testUser.getBoughtItems().set(position, item);
+            testUser.manageBalance(item, true);
+            mAdapter.notifyItemChanged(position);
+
+            refresh();
+            System.out.println("reached");
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }

@@ -1,26 +1,26 @@
 package com.example.fleanegan.reiserechner;
 
-import android.content.Context;
-import android.graphics.Color;
+import android.animation.ObjectAnimator;
+import android.graphics.drawable.TransitionDrawable;
+import android.os.CountDownTimer;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.HorizontalScrollView;
+import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.ViewHolder> {
-    private User tempUser;
-    LayoutInflater inflater;
-    Context parentContext;
-    TextView saferDeletionView;
-    LinearLayout scrollContainer;
-    TextView total;
-    int syncTheIds = 0;
+    ViewGroup parent;
     UserManager parentFragment;
-    TextView neutralizerView;
-    Integer soManyPlatesDoWeHave = 0;
+    User managedUser;
+    int colorChangeState;
+    int headerSize;
+    int dp;
+
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -35,9 +35,9 @@ public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public UserManagerAdapter(User myaDataset, UserManager parentFragment) {
-        this.tempUser = myaDataset;
+    public UserManagerAdapter(User managedUser, UserManager parentFragment) {
         this.parentFragment = parentFragment;
+        this.managedUser = managedUser;
     }
 
     // Create new views (invoked by the layout manager)
@@ -46,21 +46,16 @@ public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.
                                                             int viewType) {
         // create a new view
         LinearLayout v = (LinearLayout) LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.scrollable_wrapper_horizontal, parent, false);
+                .inflate(R.layout.cute_cardlike_view, parent, false);
 
-        v.setLayoutParams(new LinearLayout.LayoutParams(0, 0));
+        this.parent = parent;
+        View d = v.findViewById(R.id.container_delete);
+        d.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        this.headerSize = (int) parent.getResources().getDimension(R.dimen.recycler_height);
 
-        this.parentContext = parent.getContext();
-        this.inflater = (LayoutInflater) this.parentContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        this.total = (TextView) ((LinearLayout) parent.getParent().getParent()).findViewById(R.id.user_manager_total);
 
-        this.neutralizerView = (TextView) ((LinearLayout) parent.getParent().getParent()).findViewById(R.id.user_manager_neutralizer);
-        this.neutralizerView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                neutralize();
-            }
-        });
+        this.dp = ((int) parent.getResources().getDisplayMetrics().density);
+
 
         // set the view's size, margins, paddings and layout parameters
         ViewHolder vh = new ViewHolder(v);
@@ -70,96 +65,100 @@ public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.
     // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        // - get element from your dataset at this position
-        // - replace the contents of the view with that element
+        TextView child = (TextView) holder.mViewHolderLayout.findViewById(R.id.item_title);
+        child.setText(String.valueOf(position));
 
+        Item y = this.managedUser.getBoughtItems().get(position);
 
-        int localCounter = 0;
-        for (Item y : this.tempUser.getBoughtItems()) {
+        child.setText(y.getName());
 
-            //gets the scrollview -> not touched, only to retrieve children
-            HorizontalScrollView scrollView = (HorizontalScrollView) holder.mViewHolderLayout.getChildAt(0);
-            //where to put the stuff
-            this.scrollContainer = (LinearLayout) scrollView.findViewById(R.id.weird_container_scrollable_container);
-            //add another card and inflate the layout right into it
-            LinearLayout test = new LinearLayout(this.parentContext) {
-            };
-            inflater.inflate(R.layout.cute_cardlike_view, test);
-            //add test to view
-            if (soManyPlatesDoWeHave < tempUser.getBoughtItems().size()) {
-                scrollContainer.addView(test);
-                this.syncTheIds--;
-                soManyPlatesDoWeHave++;
+        TextView price = (TextView) holder.mViewHolderLayout.findViewById(R.id.item_price);
+        price.setText("price: " + y.getPrice() + "€");
+
+        TextView description = (TextView) holder.mViewHolderLayout.findViewById(R.id.item_description);
+        description.setText(y.getDescription());
+
+        final TextView deletionWarning = (TextView) holder.mViewHolderLayout.findViewById(R.id.container_delete);
+        final TextView editWarning = (TextView) holder.mViewHolderLayout.findViewById(R.id.container_edit);
+
+        final ScrollView scrollView = (ScrollView) holder.mViewHolderLayout.findViewById(R.id.container_special_scroller);
+        scrollView.post(new Runnable() {
+            @Override
+            public void run() {
+                scrollView.scrollTo(0, headerSize);
             }
-            //modify card content
-            LinearLayout cuteCardLayout = (LinearLayout) this.scrollContainer.getChildAt(localCounter);
+        });
 
-            TextView itemName = (TextView) cuteCardLayout.findViewById(R.id.item_title);
-            itemName.setText(y.getName());
-            TextView price = (TextView) cuteCardLayout.findViewById(R.id.item_price);
-            price.setText("price: " + y.getPrice() + "€");
-            this.neutralizerView.setText("last added: " + y.getTimeStamp());
-            this.total.setText(String.valueOf(tempUser.getTotalDispense()));
-            TextView removeItem = (TextView) test.findViewById(R.id.item_remove_button);
-            final LinearLayout statTest = test;
-            removeItem.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    manageItemDeletion((TextView) v, statTest);
-                }
-            });
-            removeItem.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    if (!hasFocus) {
-                        saferDeletionView = null;
-                        ((TextView) v).setTextColor(Color.parseColor("#00ff0000"));
-                    } else {
-                        manageItemDeletion((TextView) v, statTest);
+        new CountDownTimer(10, 10) {
+            public void onTick(long milliSeconds) {
+            }
+
+            public void onFinish() {
+                scrollView.setOnTouchListener(new View.OnTouchListener() {
+                    public boolean onTouch(View view, MotionEvent event) {
+                        if (event.getAction() == MotionEvent.ACTION_UP) {
+                            int scrollY = scrollView.getScrollY();
+                            if (scrollY == 0) {
+                                managedUser.removeItem(holder.getAdapterPosition());
+                                notifyItemRemoved(holder.getAdapterPosition());
+                                notifyItemRangeChanged(holder.getAdapterPosition(), getItemCount());
+                                parentFragment.manageTheSaldo();
+                            } else if (scrollY == 2 * headerSize) {
+                                parentFragment.editItem(managedUser.getBoughtItems().get(holder.getAdapterPosition()), holder.getAdapterPosition());
+                            } else {
+                                ObjectAnimator.ofInt(scrollView, "scrollY", headerSize).setDuration(1111).start();
+                            }
+                        }
+                        //important. Otherwise the scrollview wont scroll.
+                        return false;
                     }
-                }
-            });
-            localCounter++;
-            this.parentFragment.manageTheSaldo();
-        }
-        holder.mViewHolderLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-    }
+                });
 
-
-    public void manageItemDeletion(TextView view, LinearLayout test) {
-        if (!view.equals(this.saferDeletionView)) {
-            if (saferDeletionView != null) {
-                this.saferDeletionView.setTextColor(Color.parseColor("#00ff0000"));
+                scrollView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+                    @Override
+                    public void onScrollChanged() {
+                        final int Yscr = scrollView.getScrollY();
+                        if (Yscr == 0) {
+                            colorChangeState = 1;
+                            deletionWarning.setText("release to delete");
+                            animatedBgColorChange(deletionWarning);
+                        } else if (Yscr == 2 * headerSize) {
+                            colorChangeState = 2;
+                            editWarning.setText("release to edit");
+                            animatedBgColorChange(editWarning);
+                        } else if (Yscr < 150) {
+                            if (colorChangeState != 0) {
+                                colorChangeState = 0;
+                                deletionWarning.setText("swipe further to delete");
+                                animatedBgColorChangeRev(deletionWarning);
+                            }
+                        } else if (Yscr > (2 * headerSize - 50)) {
+                            if (colorChangeState != 0) {
+                                colorChangeState = 0;
+                                editWarning.setText("swipe further to edit");
+                                animatedBgColorChangeRev(editWarning);
+                            }
+                        }
+                    }
+                });
             }
-            this.saferDeletionView = view;
-            view.setTextColor(Color.parseColor("#E53935"));
-            return;
-        } else this.saferDeletionView = null;
-
-        int measuredId = this.scrollContainer.indexOfChild(test);
-
-        this.scrollContainer.removeViewAt(measuredId);
-        tempUser.removeItem(measuredId);
-
-        this.parentFragment.manageTheSaldo();
-        this.total.setText(String.valueOf(tempUser.getTotalDispense()));
-
-        //fix weird bug that forcecloses the app when trying to
-        //add a user after clearing the whole list.
-        if (this.scrollContainer.getChildCount() == 0) this.parentFragment.refresh();
+        }.start();
     }
-
-    public void neutralize() {
-        if (this.saferDeletionView != null) {
-            this.saferDeletionView.setTextColor(Color.parseColor("#00ff0000"));
-            this.saferDeletionView = null;
-        }
-    }
-
 
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
-        return 1;
+        return this.managedUser.getBoughtItems().size();
+    }
+
+
+    public void animatedBgColorChange(TextView view) {
+        TransitionDrawable trans = (TransitionDrawable) view.getBackground();
+        trans.startTransition(250);
+    }
+
+    public void animatedBgColorChangeRev(TextView view) {
+        TransitionDrawable trans = (TransitionDrawable) view.getBackground();
+        trans.reverseTransition(250);
     }
 }

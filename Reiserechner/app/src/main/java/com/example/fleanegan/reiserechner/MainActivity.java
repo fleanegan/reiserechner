@@ -22,38 +22,36 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    int remember = -1;
     Integer userId = 0;
+    Integer dp;
+    String serFileName = "static.ser";
+    ArrayList<User> userList;
+    File saveTo;
+    View headerView;
+    View dummyView;
     DrawerLayout drawer;
     NavigationView navigationView;
+    Button cancelUserAdd;
+    TextView saferDeletionTextView = null;
     LinearLayout addUserLayout;
     LinearLayout addUserInterfaceLayout;
-    View headerView;
-    Integer dp;
-    Button cancelUserAdd;
-    ArrayList<User> userList;
-    String serFileName = "static.ser";
-    File saveTo;
-    int saferDeletion = -1;
-    TextView saferDeletionTextView = null;
+    LinearLayout testNavMenuAlternative;
+    IOManager ioManager = new IOManager(this);
 
+    @Override
+    public void onSaveInstanceState(Bundle out) {
+        //bugfix -> illegalStateException
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -85,19 +83,29 @@ public class MainActivity extends AppCompatActivity {
         toggle.syncState();
 
         this.navigationView = (NavigationView) findViewById(R.id.nav_view);
-        this.addButtonsAllOverThePlace();
+        this.initialize();
 
         this.saveTo = new File((this.getApplicationContext().getFileStreamPath(this.serFileName).getPath()));
-        this.deserialize(this.saveTo);
+        this.ioManager.deserialize(this.saveTo, false);
+
+        this.ioManager.getFiles();
     }
 
+
+    /**
+     * makes the home screen appear on every launch
+     */
     @Override
-    public void onStart() {
-        this.pushUserToFragment(-1, false);
-        super.onStart();
+    public void onResumeFragments() {
+        this.pushUserToFragment(this.remember);
     }
 
-    //maybe used to get the navdrawer a nicer height
+
+    /**
+     * layout reasons
+     *
+     * @return status bar height
+     */
     public int getStatusBarHeight() {
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -107,7 +115,12 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-    private void addButtonsAllOverThePlace() {
+
+    /**
+     * prepares globally used views and other stuff.
+     * Mainly occupied in order to get the navbar working.
+     */
+    protected void initialize() {
 
         NavigationView nav = (NavigationView) findViewById(R.id.nav_view);
         LinearLayout header = (LinearLayout) nav.findViewById(R.id.test_nav_menu_alternative);
@@ -123,9 +136,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        TextView placeHeader = (TextView) headerView.findViewById(R.id.adapt_to_status_bar);
+        TextView placeHeader = (TextView) this.headerView.findViewById(R.id.adapt_to_status_bar);
         placeHeader.getLayoutParams().height = this.getStatusBarHeight();
-        Log.d("STATUSBAR", "Height = " + this.getStatusBarHeight());
         placeHeader.setHeight(this.getStatusBarHeight());
 
         //manage the user_add_interface
@@ -142,14 +154,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 EditText userInput = (EditText) MainActivity.this.headerView.findViewById(R.id.add_user_interface_input);
-                MainActivity.this.modifyNavDrawer(userInput.getText().toString(), false);
+                MainActivity.this.addUser(userInput.getText().toString(), false);
                 userInput.setText("");
                 userInput.requestFocus();
             }
         });
     }
 
-
+    /**
+     * wrapper for managing a clean user-adding-experience - closer
+     */
     private void closeManageUserAddDialog() {
         //collapses keyboard
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -162,11 +176,14 @@ public class MainActivity extends AppCompatActivity {
         MainActivity.this.addUserLayout.post(new Runnable() {
             @Override
             public void run() {
-                addUserLayout.measure(View.MeasureSpec.EXACTLY, View.MeasureSpec.EXACTLY);
+                MainActivity.this.addUserLayout.measure(View.MeasureSpec.EXACTLY, View.MeasureSpec.EXACTLY);
             }
         });
     }
 
+    /**
+     * wrapper for managing a clean user-adding-experience - opener
+     */
     public void openManageUserAddDialog() {
         Animations animator = new Animations();
         animator.collapse(MainActivity.this.addUserLayout, 0);
@@ -186,9 +203,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    /**
+     * declares the behavior of the app when the back button is tapped-
+     * default is toggle nav drawer. TODO: Figure out if customers appreciate this behavior
+     */
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (this.remember == -2) {
+            this.pushUserToFragment(-1);
+            this.remember = -1;
+            return;
+        }
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -196,19 +222,53 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+/*    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        System.out.println("bunu");
+    }*/
 
-    private void modifyNavDrawer(String name, Boolean alreadyAdded) {
+
+    /**
+     * Add the user to the user-list and creates a view for it in the navdrawer
+     *
+     * @param alreadyAdded: only true when called by the serializer in order to prevent
+     *                      the program to multiply users.
+     * @param name:         name of the user. in this very function it is going to be written to the navdrawer.
+     */
+    protected void addUser(String name, Boolean alreadyAdded) {
+        //gets all the necessary stuff -> condition attempts to reduce calculation
         if (!name.equals("")) {
             LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             final LinearLayout myView = (LinearLayout) inflater.inflate(R.layout.menu_item, null);
             final TextView testName = (TextView) myView.findViewById(R.id.test_nav_menu_alternative_name);
+            if (this.testNavMenuAlternative == null) {
+                this.testNavMenuAlternative = (LinearLayout) this.navigationView.findViewById(R.id.test_nav_menu_alternative_scrollable);
+                this.dummyView = navigationView.findViewById(R.id.dummy);
+                this.dummyView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        neutralize();
+                    }
+                });
+                final TextView pushHome = (TextView) findViewById(R.id.nav_bar_push_home);
+                pushHome.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        pushUserToFragment(-1);
+                        drawer.closeDrawer(GravityCompat.START);
+                    }
+                });
+            }
+
+            //setting values to the item-specific view
             testName.setText(name);
             testName.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     LinearLayout test = (LinearLayout) myView.getParent();
-                    pushUserToFragment(test.indexOfChild(myView), true);
-                    drawer.closeDrawer(Gravity.LEFT);
+                    pushUserToFragment(test.indexOfChild(myView));
+                    Log.d("indexer", String.valueOf(test.indexOfChild(myView)));
+                    MainActivity.this.drawer.closeDrawer(Gravity.LEFT);
                 }
             });
 
@@ -221,44 +281,41 @@ public class MainActivity extends AppCompatActivity {
                     removeUser(id, testRemove);
                 }
             });
-            LinearLayout testNavMenuAlternative = (LinearLayout) navigationView.findViewById(R.id.test_nav_menu_alternative_scrollable);
-            View dummyView = navigationView.findViewById(R.id.dummy);
-            dummyView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    neutralize();
-                }
-            });
-
-            testNavMenuAlternative.addView(myView);
-            if (!alreadyAdded) this.addUser(name);
+            this.testNavMenuAlternative.addView(myView);
+            if (!alreadyAdded) {
+                this.userList.add(new User(name, this.userId));
+                this.userId++;
+            }
         }
     }
 
-
+    /**
+     * enables the deselection of the zh -> deletion
+     */
     public void neutralize() {
-        if (saferDeletionTextView != null)
-            saferDeletionTextView.setTextColor(Color.parseColor("#00ff0000"));
-        saferDeletion = -1;
+        if (this.saferDeletionTextView != null) {
+            this.saferDeletionTextView.setTextColor(Color.parseColor("#00ff0000"));
+            this.saferDeletionTextView = null;
+        }
     }
 
-    public void addUser(String name) {
-        this.userList.add(new User(name, this.userId));
-        Log.d("indexMystery", this.userId + name);
-        this.userId++;
-    }
-
+    /**
+     * uses a double-tap-mechanism in order to prevent the customer
+     * to accidentally delete a user.
+     *
+     * @param id: position of user-view in @see this.testNavMenuAlternative
+     * @param textView: zh, needed to enable double-tap-security
+     *
+     */
     public void removeUser(int id, TextView textView) {
-        if (id != saferDeletion) {
-            if (saferDeletionTextView != null)
-                saferDeletionTextView.setTextColor(Color.parseColor("#00ff0000"));
-            saferDeletion = id;
-            saferDeletionTextView = textView;
+        if (!textView.equals(this.saferDeletionTextView)) {
+            if (this.saferDeletionTextView != null)
+                this.saferDeletionTextView.setTextColor(Color.parseColor("#00ff0000"));
+            this.saferDeletionTextView = textView;
             textView.setTextColor(Color.parseColor("#E53935"));
             return;
         } else {
-            saferDeletion = -1;
-            saferDeletionTextView = null;
+            this.saferDeletionTextView = null;
         }
         for (Item i : this.userList.get(id).getBoughtItems()) {
             User.itemList.remove(i);
@@ -266,96 +323,51 @@ public class MainActivity extends AppCompatActivity {
         User.totalAmount = User.totalAmount.subtract(this.userList.get(id).getTotalDispense());
         this.userList.remove(id);
         User.numberOfUsers--;
-        LinearLayout userOverView = (LinearLayout) navigationView.findViewById(R.id.test_nav_menu_alternative_scrollable);
-        userOverView.removeViewAt(id);
-    }
-
-
-    public void pushHome(View view) {
-        this.pushUserToFragment(-1, false);
+        this.testNavMenuAlternative.removeViewAt(id);
+        this.pushUserToFragment(-1);
         this.drawer.closeDrawer(GravityCompat.START);
     }
 
-    public void pushUserToFragment(Integer id, Boolean isUser) {
+    /**
+     * Fills and calls the fragment with home or user respectively.
+     *
+     * @param id: position in @see this.userList. if id < 0 -> home or descendant
+     */
+    public void pushUserToFragment(Integer id) {
         Bundle alreadyDone = new Bundle();
         neutralize();
         Fragment fragment;
-        if (isUser) {
+        if (id >= 0) {
             alreadyDone.putSerializable("user", this.userList.get(id));
             alreadyDone.putBoolean("leaveOpen", false);
             fragment = new UserManager();
-        } else {
+        } else if(id == -1) {
             fragment = new HomeManager();
+            this.ioManager.serialize(this.saveTo);
+        } else {
+            fragment = new ProjectManager();
         }
+
+        this.remember = id;
+
         LinearLayout buttonBox = (LinearLayout) findViewById(R.id.button_container);
         buttonBox.removeAllViewsInLayout();
         fragment.setArguments(alreadyDone);
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
 
+
         transaction.add(R.id.button_container, fragment);
+        transaction.addToBackStack(null);
         transaction.commit();
     }
 
     @Override
     public void onStop() {
-        this.serialize(this.saveTo);
+        this.ioManager.serialize(this.saveTo);
         LinearLayout buttonBox = (LinearLayout) findViewById(R.id.button_container);
         buttonBox.removeAllViewsInLayout();
+
         super.onStop();
     }
-
-    public void serialize(File serFileName) {
-        Log.d("SERIALIZATION", "initialized");
-
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(serFileName), "utf-8"))) {
-            writer.write("");
-        } catch (Exception ef) {
-            ef.getCause();
-        }
-
-        Serializer serializer = new Serializer();
-        serializer.addUser(this.userList, User.totalAmount);
-
-        FileOutputStream fileOutputStream = null;
-        ObjectOutputStream objectOutputStream = null;
-
-        try {
-            fileOutputStream = new FileOutputStream(serFileName);
-            objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(serializer);
-            objectOutputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Log.d("SERIALIZATION", "terminated");
-    }
-
-    public void deserialize(File fileName) {
-        Log.d("DE-SERIALIZATION", "initialized");
-        FileInputStream fileInputStream = null;
-        ObjectInputStream objectInputStream = null;
-        Serializer serializer = new Serializer();
-
-        try {
-            fileInputStream = new FileInputStream(fileName.getAbsolutePath());
-            objectInputStream = new ObjectInputStream(fileInputStream);
-            serializer = (Serializer) objectInputStream.readObject();
-        } catch (Exception e) {
-        }
-        this.userList = serializer.getUserArrayList();
-
-        User.totalAmount = serializer.getSaveTheAmount();
-        User.numberOfUsers = serializer.getNumberOfUsers();
-        if (serializer.getItemList() != null) User.itemList = serializer.getItemList();
-
-        for (User u : this.userList) {
-            Log.d("DE-SERIALIZATION", "accessed");
-            String cc = u.getName();
-            this.userId++;
-            modifyNavDrawer(cc, true);
-        }
-    }
-
 }

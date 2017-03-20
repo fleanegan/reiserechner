@@ -39,8 +39,6 @@
             android:textSize="26sp"
             android:id="@+id/user_manager_total"
             android:text="0.0" />
-
-
     </LinearLayout>
 
     <TextView
@@ -49,6 +47,7 @@
         android:layout_width="match_parent"
         android:layout_height="45sp"
         android:gravity="center"
+        android:elevation="2dp"
         android:textSize="20sp"
         android:id="@+id/user_manager_collapse"
         android:layout_marginBottom="8dp"
@@ -68,7 +67,8 @@
             android:layout_height="wrap_content">
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
@@ -82,7 +82,7 @@
                     android:text="name" />
 
                 <EditText
-                    android:layout_width="250dp"
+                    android:layout_width="match_parent"
                     android:layout_height="35sp"
                     android:textSize="16sp"
                     android:singleLine="true"
@@ -93,10 +93,9 @@
             </LinearLayout>
 
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="35dp"
                 android:layout_height="22dp"
-                android:text=""
-                android:layout_weight="1" />
+                android:text="" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -113,7 +112,7 @@
                     android:text="price" />
 
                 <EditText
-                    android:layout_width="match_parent"
+                    android:layout_width="50dp"
                     android:layout_height="35sp"
                     android:textSize="16sp"
                     android:singleLine="true"
@@ -143,15 +142,11 @@
         <android.support.v7.widget.RecyclerView
             android:layout_marginTop="0dp"
             android:layout_width="match_parent"
-            android:layout_height="230dp"
+            android:layout_height="@dimen/recycler_height"
+            android:background="#B0BEC5"
             android:overScrollMode="never"
             android:id="@+id/user_manager_recycler_view"
-            android:orientation="horizontal"></android.support.v7.widget.RecyclerView>
-
-        <TextView
-            android:layout_width="10000dp"
-            android:layout_height="2dp" />
-
+            android:orientation="horizontal" />
     </LinearLayout>
 
 
@@ -160,6 +155,10 @@
         android:layout_height="1910dp"
         android:gravity="center_horizontal"
         android:id="@+id/user_manager_neutralizer" />
+
+    <TextView
+        android:layout_width="3333dp"
+        android:layout_height="3dp" />
 
 
 </LinearLayout>
