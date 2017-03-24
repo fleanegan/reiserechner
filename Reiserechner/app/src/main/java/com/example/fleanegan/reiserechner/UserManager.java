@@ -225,7 +225,7 @@ public class UserManager extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         System.out.println("banana " + requestCode);
-        if (requestCode == 1) {
+        if (requestCode == 1 && resultCode == 1) {
             Item item = (Item) data.getExtras().get("item");
             int position = (int) data.getExtras().get("position");
             testUser.manageBalance(testUser.getBoughtItems().get(position), false);

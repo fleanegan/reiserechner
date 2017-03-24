@@ -72,6 +72,8 @@ public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.
 
         child.setText(y.getName());
 
+        System.out.println();
+
         TextView price = (TextView) holder.mViewHolderLayout.findViewById(R.id.item_price);
         price.setText("price: " + y.getPrice() + "€");
 
@@ -89,7 +91,7 @@ public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.
             }
         });
 
-        new CountDownTimer(10, 10) {
+        new CountDownTimer(1, 1) {
             public void onTick(long milliSeconds) {
             }
 
@@ -105,6 +107,9 @@ public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.
                                 parentFragment.manageTheSaldo();
                             } else if (scrollY == 2 * headerSize) {
                                 parentFragment.editItem(managedUser.getBoughtItems().get(holder.getAdapterPosition()), holder.getAdapterPosition());
+                            } else if (scrollY == headerSize) {
+                                scrollView.smoothScrollBy(0, 25);
+                                ObjectAnimator.ofInt(scrollView, "scrollY", headerSize).setDuration(1111).start();
                             } else {
                                 ObjectAnimator.ofInt(scrollView, "scrollY", headerSize).setDuration(1111).start();
                             }

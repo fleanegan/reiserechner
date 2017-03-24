@@ -25,12 +25,15 @@ import android.widget.TextView;
 import java.io.File;
 import java.util.ArrayList;
 
+import static com.example.fleanegan.reiserechner.R.string.navigation_drawer_open;
+
 public class MainActivity extends AppCompatActivity {
 
     int remember = -1;
+    boolean intialized = false;
     Integer userId = 0;
     Integer dp;
-    String serFileName = "static.ser";
+    String serFileName = "new project.ser";
     ArrayList<User> userList;
     File saveTo;
     View headerView;
@@ -44,6 +47,9 @@ public class MainActivity extends AppCompatActivity {
     LinearLayout testNavMenuAlternative;
     IOManager ioManager = new IOManager(this);
 
+    ActionBarDrawerToggle mDrawerToggle;
+    Toolbar toolbar;
+
     @Override
     public void onSaveInstanceState(Bundle out) {
         //bugfix -> illegalStateException
@@ -54,8 +60,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        this.toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(this.serFileName.substring(0, this.serFileName.toCharArray().length - 4));
 
         LinearLayout buttonBox = (LinearLayout) findViewById(R.id.button_container);
         buttonBox.removeAllViews();
@@ -64,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
         this.drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, this.drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
+                this, this.drawer, toolbar, navigation_drawer_open, R.string.navigation_drawer_close) {
             @Override
             public void onDrawerClosed(View view) {
                 MainActivity.this.addUserLayout.getLayoutParams().height = 80 * dp;
@@ -85,10 +92,28 @@ public class MainActivity extends AppCompatActivity {
         this.navigationView = (NavigationView) findViewById(R.id.nav_view);
         this.initialize();
 
-        this.saveTo = new File((this.getApplicationContext().getFileStreamPath(this.serFileName).getPath()));
+        ArrayList<File> fileList = this.ioManager.getFiles();
+        if (fileList.size() == 0)
+            this.saveTo = new File((this.getApplicationContext().getFileStreamPath(this.serFileName).getPath()));
+        else this.saveTo = fileList.get(0);
+
         this.ioManager.deserialize(this.saveTo, false);
 
         this.ioManager.getFiles();
+
+        this.mDrawerToggle = new ActionBarDrawerToggle(this, drawer, this.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+            }
+        };
+        this.drawer.setDrawerListener(this.mDrawerToggle);
     }
 
 
@@ -121,7 +146,14 @@ public class MainActivity extends AppCompatActivity {
      * Mainly occupied in order to get the navbar working.
      */
     protected void initialize() {
-
+        final TextView pushHome = (TextView) findViewById(R.id.nav_bar_push_home);
+        pushHome.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pushUserToFragment(-1);
+                drawer.closeDrawer(GravityCompat.START);
+            }
+        });
         NavigationView nav = (NavigationView) findViewById(R.id.nav_view);
         LinearLayout header = (LinearLayout) nav.findViewById(R.id.test_nav_menu_alternative);
         this.headerView = header.getChildAt(0);
@@ -210,9 +242,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        System.out.println("drawertest " + this.remember);
         if (this.remember == -2) {
-            this.pushUserToFragment(-1);
             this.remember = -1;
+            this.pushUserToFragment(-1);
             return;
         }
         if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -222,10 +255,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-/*    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        System.out.println("bunu");
-    }*/
+    @Override
+    public boolean onSupportNavigateUp() {
+        this.pushUserToFragment(-1);
+        return true;
+    }
 
 
     /**
@@ -248,14 +282,6 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         neutralize();
-                    }
-                });
-                final TextView pushHome = (TextView) findViewById(R.id.nav_bar_push_home);
-                pushHome.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        pushUserToFragment(-1);
-                        drawer.closeDrawer(GravityCompat.START);
                     }
                 });
             }
@@ -325,7 +351,6 @@ public class MainActivity extends AppCompatActivity {
         User.numberOfUsers--;
         this.testNavMenuAlternative.removeViewAt(id);
         this.pushUserToFragment(-1);
-        this.drawer.closeDrawer(GravityCompat.START);
     }
 
     /**
@@ -338,10 +363,12 @@ public class MainActivity extends AppCompatActivity {
         neutralize();
         Fragment fragment;
         if (id >= 0) {
+            getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             alreadyDone.putSerializable("user", this.userList.get(id));
             alreadyDone.putBoolean("leaveOpen", false);
             fragment = new UserManager();
         } else if(id == -1) {
+            getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             fragment = new HomeManager();
             this.ioManager.serialize(this.saveTo);
         } else {
@@ -353,14 +380,38 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout buttonBox = (LinearLayout) findViewById(R.id.button_container);
         buttonBox.removeAllViewsInLayout();
         fragment.setArguments(alreadyDone);
-        FragmentManager fragmentManager = getSupportFragmentManager();
+        final FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-
         transaction.add(R.id.button_container, fragment);
         transaction.addToBackStack(null);
         transaction.commit();
+
+        getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+            @Override
+            public void onBackStackChanged() {
+                if (getSupportFragmentManager().getBackStackEntryCount() > 1) {
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(true); // show back button
+                    toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onBackPressed();
+                        }
+                    });
+                } else {
+                    //show hamburger
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+                    mDrawerToggle.syncState();
+                    toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            drawer.openDrawer(GravityCompat.START);
+                        }
+                    });
+                }
+            }
+        });
     }
+
 
     @Override
     public void onStop() {

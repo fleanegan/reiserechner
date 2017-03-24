@@ -85,12 +85,13 @@ public class HomeManager extends Fragment {
 
 
         this.mAdapter.notifyDataSetChanged();
-        if (User.numberOfUsers == 0) {
+        if (User.numberOfUsers == 0 && !((MainActivity) getActivity()).intialized) {
             final android.os.Handler handler = new android.os.Handler();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     drawerLayout.openDrawer(GravityCompat.START);
+                    ((MainActivity) getActivity()).intialized = true;
                 }
             }, 1000);
         }
@@ -106,6 +107,9 @@ public class HomeManager extends Fragment {
     public ArrayList<ArrayList<Item>> getDateSortedUserList() {
         ArrayList<ArrayList<Item>> container = new ArrayList<>();
         ArrayList<Item> sortedByDate = User.itemList;
+        if (User.itemList == null) return new ArrayList<>();
+        if (User.itemList.size() == 0) return new ArrayList<>();
+
         Collections.sort(sortedByDate, new Comparator<Item>() {
                     @Override
                     public int compare(Item o1, Item o2) {
@@ -113,6 +117,7 @@ public class HomeManager extends Fragment {
                     }
                 }
         );
+
         Date day = null;
         ArrayList<Item> holder = new ArrayList<>();
 

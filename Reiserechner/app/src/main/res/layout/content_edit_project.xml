@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+    android:layout_marginTop="8dp"
+    android:orientation="vertical">
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:labelFor="@+id/edit_item_name"
+        android:text="name"
+        android:layout_marginBottom="8dp"
+        android:textAllCaps="true"
+        android:textSize="24sp" />
+
+    <EditText
+        android:id="@+id/edit_project_name"
+        android:layout_width="match_parent"
+        android:inputType="textNoSuggestions|textVisiblePassword"
+        style="@style/standartTextView"
+        android:layout_marginBottom="8dp"
+        android:text="" />
+
+</LinearLayout>

@@ -1,92 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+    android:layout_marginTop="8dp"
     android:orientation="vertical">
 
 
-    <ScrollView
+    <TextView
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:labelFor="@+id/edit_item_name"
+        android:text="name"
+        android:layout_marginBottom="8dp"
+        android:textAllCaps="true"
+        android:textSize="24sp" />
+
+    <EditText
+        android:id="@+id/edit_item_name"
+        android:layout_width="match_parent"
+        style="@style/standartTextView"
+        android:layout_marginBottom="8dp"
+        android:text="" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@+id/edit_item_price"
+        android:layout_marginBottom="8dp"
+        android:textColor="@color/colorPrimary"
+        android:text="price"
+        android:textAllCaps="true"
+        android:textSize="24sp" />
+
+    <EditText
+        android:id="@+id/edit_item_price"
+        android:layout_width="match_parent"
+        android:ems="10"
+        style="@style/standartTextView"
+        android:layout_marginBottom="8dp"
+
+        android:inputType="numberSigned" />
+
+    <TextView
+        android:textColor="@color/colorPrimary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@+id/edit_item_description"
+        android:text="description"
+        android:textAllCaps="true"
+        android:textSize="24sp" />
+
+    <MultiAutoCompleteTextView
+        android:id="@+id/edit_item_description"
+        android:layout_width="match_parent"
+        style="@style/standartTextView"
         android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <LinearLayout
-            android:id="@+id/item_value_holder"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-
-            android:orientation="vertical"
-            android:background="@android:color/holo_orange_light">
-
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="name"
-                android:labelFor="@+id/edit_item_name"
-                android:textAllCaps="true"
-                android:textSize="24sp" />
-
-            <EditText
-                android:id="@+id/edit_item_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="price"
-                android:labelFor="@+id/edit_item_price"
-                android:textAllCaps="true"
-                android:textSize="24sp" />
-
-            <EditText
-                android:id="@+id/edit_item_price"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="numberSigned" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="description"
-                android:labelFor="@+id/edit_item_description"
-                android:textAllCaps="true"
-                android:textSize="24sp" />
-
-            <MultiAutoCompleteTextView
-                android:id="@+id/edit_item_description"
-                android:layout_width="match_parent"
-                android:layout_weight="1"
-                android:layout_height="0dp"
-                android:text="" />
-
-
-        </LinearLayout>
-    </ScrollView>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:background="@android:color/holo_orange_dark"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/edit_item_reset"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="reset" />
-
-        <Button
-            android:id="@+id/edit_item_apply"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="apply" />
-    </LinearLayout>
-
+        android:minHeight="100sp"
+        android:minLines="2"
+        android:layout_weight="1"
+        android:gravity="top"
+        android:layout_marginBottom="36dp" />
 </LinearLayout>

@@ -2,45 +2,32 @@ package com.example.fleanegan.reiserechner;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.MultiAutoCompleteTextView;
+import android.widget.ScrollView;
 
 /**
  * Created by fleanegan on 18.03.17.
  */
 
-public class EditItem extends AppCompatActivity {
+public class EditItem extends Edit {
 
     int position;
     Item item;
-    Button apply;
-    EditText itemPrice;
-    EditText itemName;
-    MultiAutoCompleteTextView itemDescription;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setContentView(R.layout.edit);
+        getLayoutInflater().inflate(R.layout.content_edit_item, (ScrollView) findViewById(R.id.edit_scroll_view));
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.content_edit_item);
-
         Intent intent = getIntent();
+
         if (intent.hasExtra("item")) this.item = (Item) intent.getExtras().get("item");
         if (intent.hasExtra("position")) this.position = (int) intent.getExtras().get("position");
 
-        this.itemPrice = (EditText) findViewById(R.id.edit_item_price);
-        this.itemName = (EditText) findViewById(R.id.edit_item_name);
-        this.itemDescription = (MultiAutoCompleteTextView) findViewById(R.id.edit_item_description);
-        this.apply = (Button) findViewById(R.id.edit_item_apply);
-        this.apply.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                EditItem.this.finish();
-            }
-        });
+        this.initialize(savedInstanceState);
+    }
 
+    public void initialize(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             if (savedInstanceState.getString("itemPrice").equals(""))
                 this.itemPrice.setText(String.valueOf(item.getPrice()));
@@ -68,16 +55,18 @@ public class EditItem extends AppCompatActivity {
         super.onSaveInstanceState(savedInstanceState);
     }
 
-
     @Override
     public void finish() {
-        Intent dataToSendBack = new Intent();
-        item.setName(itemName.getText().toString());
-        item.setDescription(itemDescription.getText().toString());
-        item.setPrice(itemPrice.getText().toString());
-        dataToSendBack.putExtra("position", position);
-        setResult(1, dataToSendBack.putExtra("item", item));
-        getFragmentManager().popBackStackImmediate();
+        if (this.approved) {
+            System.out.println("called");
+            Intent dataToSendBack = new Intent();
+            item.setName(itemName.getText().toString());
+            item.setDescription(itemDescription.getText().toString());
+            item.setPrice(itemPrice.getText().toString());
+            dataToSendBack.putExtra("position", position);
+            setResult(1, dataToSendBack.putExtra("item", item));
+            getFragmentManager().popBackStackImmediate();
+        } else setResult(0);
         super.finish();
     }
 }
