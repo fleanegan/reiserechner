@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="8dp"
     android:orientation="vertical">
 
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
+        android:layout_margin="16dp"
+
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:text="Projects"
@@ -37,18 +35,5 @@
     <TextView
         android:layout_width="3333dp"
         android:layout_height="2dp" />
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/project_manager_fab"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_width="56dp"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:layout_height="56dp"
-        app:backgroundTint="@color/colorPrimary"
-        android:layout_gravity="bottom|right"
-        android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@mipmap/arrow_forward" />
 
 </LinearLayout>

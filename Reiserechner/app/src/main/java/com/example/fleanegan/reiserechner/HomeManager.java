@@ -1,6 +1,7 @@
 package com.example.fleanegan.reiserechner;
 
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -19,6 +20,8 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+
+import me.anwarshahriar.calligrapher.Calligrapher;
 
 /**
  * Created by fleanegan on 18.02.17.
@@ -64,6 +67,8 @@ public class HomeManager extends Fragment {
 
         this.initialize();
 
+        Calligrapher calligrapher = new Calligrapher(getContext());
+        calligrapher.setFont(view, getResources().getString(R.string.font_fu));
     }
 
     public void launchProjectManager() {
@@ -95,6 +100,8 @@ public class HomeManager extends Fragment {
                 }
             }, 1000);
         }
+        ((MainActivity) getActivity()).fragmentFAB = (FloatingActionButton) getActivity().findViewById(R.id.main_fab);
+        ((MainActivity) getActivity()).fragmentFAB.setVisibility(View.INVISIBLE);
     }
 
 

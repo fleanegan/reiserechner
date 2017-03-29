@@ -101,7 +101,7 @@ public class IOManager {
         }
         Collections.sort(returnList, new Comparator<File>() {
             public int compare(File f1, File f2) {
-                return Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+                return Long.valueOf(f2.lastModified()).compareTo(f1.lastModified());
             }
         });
         return returnList;
@@ -132,7 +132,7 @@ public class IOManager {
             try {
                 this.mainActivity.saveTo.createNewFile();
             } catch (Exception e) {
-                System.out.println("mothefuckea");
+                System.out.println("could not create file");
             }
             this.loadProject(this.mainActivity.saveTo, true);
         } else {

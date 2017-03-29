@@ -51,7 +51,7 @@
         android:elevation="30dp"
         android:layout_marginTop="4dp"
         android:fontFamily="sans-serif"
-        android:text="@string/home" />
+        android:text="Home" />
 
     <LinearLayout
         android:layout_width="match_parent"

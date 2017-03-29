@@ -10,7 +10,7 @@
         android:layout_margin="8dp"
         android:id="@+id/project_manager_menu_delete"
         android:text="Delete project"
-        android:textColor="#fd96"
+        android:textColor="@color/colorPrimary"
         android:textSize="18sp" />
 
     <TextView
@@ -19,7 +19,7 @@
         android:layout_margin="8dp"
         android:id="@+id/project_manager_menu_rename"
         android:text="Rename"
-        android:textColor="#fd96"
+        android:textColor="@color/colorPrimary"
         android:textSize="18sp" />
 
     <TextView
@@ -28,7 +28,7 @@
         android:layout_margin="8dp"
         android:id="@+id/project_manager_menu_load"
         android:text="Load project"
-        android:textColor="#fd96"
+        android:textColor="@color/colorPrimary"
         android:textSize="18sp" />
 
 </LinearLayout>

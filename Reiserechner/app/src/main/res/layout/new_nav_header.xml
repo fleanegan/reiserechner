@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="28dp"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:id="@+id/nav_boss"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:id="@+id/adapt_to_status_bar" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:text="users"
+            android:textAllCaps="true"
+            android:textColor="@color/textSecondary"
+            android:textSize="28sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="32dp"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@mipmap/add_user"
+                    android:id="@+id/add_user_interface_confirm"
+                    android:backgroundTint="@color/colorPrimary" />
+
+                <EditText
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:id="@+id/add_user_interface_input"
+                    android:layout_weight="1"
+                    android:background="#fff" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="48dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>

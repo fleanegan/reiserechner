@@ -12,6 +12,8 @@ import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
+import me.anwarshahriar.calligrapher.Calligrapher;
+
 
 /**
  * Created by fleanegan on 10.03.17.
@@ -37,11 +39,15 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
     @Override
     public HomeAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LinearLayout toBePushed = (LinearLayout) LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.scrollable_wrapper_vertical, parent, false);
+                .inflate(R.layout.home_day, parent, false);
+
+        Calligrapher calligrapher = new Calligrapher(parent.getContext());
+        calligrapher.setFont(toBePushed, parent.getResources().getString(R.string.font_fu));
 
         toBePushed.getLayoutParams().width = LinearLayout.LayoutParams.MATCH_PARENT;
 
         this.parent = parent;
+
 
 
         ViewHolder returnHolder = new ViewHolder(toBePushed);
@@ -51,17 +57,16 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        LinearLayout collapsedDay = (LinearLayout) LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.home_day, this.parent, false);
 
-        TextView header = (TextView) collapsedDay.findViewById(R.id.home_header);
+
+        TextView header = (TextView) holder.homeLayout.findViewById(R.id.home_header);
         header.setText(new SimpleDateFormat("dd.MM.yyyy").format(this.sortedArrayList.get(position).get(0).getDate()));
 
-        TextView subTotal = (TextView) collapsedDay.findViewById(R.id.home_header_sub_total);
+        TextView subTotal = (TextView) holder.homeLayout.findViewById(R.id.home_header_sub_total);
         BigDecimal subTotalValue = new BigDecimal(0);
 
-        final LinearLayout container = (LinearLayout) collapsedDay.findViewById(R.id.home_day_container);
-        LinearLayout collapser = (LinearLayout) collapsedDay.findViewById(R.id.home_collapser);
+        final LinearLayout container = (LinearLayout) holder.homeLayout.findViewById(R.id.home_day_container);
+        LinearLayout collapser = (LinearLayout) holder.homeLayout.findViewById(R.id.home_collapser);
         final TextView schraegStrich = (TextView) collapser.findViewById(R.id.schraegStrich);
         schraegStrich.setText("\\");
         collapser.setOnClickListener(new View.OnClickListener() {
@@ -91,7 +96,6 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
             subTotalValue = subTotalValue.add(i.getPrice());
         }
         subTotal.setText(String.valueOf(subTotalValue.setScale(2, RoundingMode.HALF_EVEN)));
-        holder.homeLayout.addView(collapsedDay);
     }
 
 

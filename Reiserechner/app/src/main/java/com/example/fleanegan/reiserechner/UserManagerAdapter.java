@@ -13,6 +13,8 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import me.anwarshahriar.calligrapher.Calligrapher;
+
 public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.ViewHolder> {
     ViewGroup parent;
     UserManager parentFragment;
@@ -53,6 +55,8 @@ public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.
         d.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         this.headerSize = (int) parent.getResources().getDimension(R.dimen.recycler_height);
 
+        Calligrapher calligrapher = new Calligrapher(this.parent.getContext());
+        calligrapher.setFont(v, this.parent.getResources().getString(R.string.font_fu));
 
         this.dp = ((int) parent.getResources().getDisplayMetrics().density);
 
@@ -71,8 +75,6 @@ public class UserManagerAdapter extends RecyclerView.Adapter<UserManagerAdapter.
         Item y = this.managedUser.getBoughtItems().get(position);
 
         child.setText(y.getName());
-
-        System.out.println();
 
         TextView price = (TextView) holder.mViewHolderLayout.findViewById(R.id.item_price);
         price.setText("price: " + y.getPrice() + "€");

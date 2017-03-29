@@ -65,7 +65,6 @@ public class EditItem extends Edit {
             item.setPrice(itemPrice.getText().toString());
             dataToSendBack.putExtra("position", position);
             setResult(1, dataToSendBack.putExtra("item", item));
-            getFragmentManager().popBackStackImmediate();
         } else setResult(0);
         super.finish();
     }

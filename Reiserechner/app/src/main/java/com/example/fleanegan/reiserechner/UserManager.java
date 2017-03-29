@@ -6,6 +6,8 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Gravity;
@@ -13,12 +15,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.math.BigDecimal;
+
+import me.anwarshahriar.calligrapher.Calligrapher;
 
 /**
  * Created by fleanegan on 18.02.17.
@@ -26,25 +32,32 @@ import java.math.BigDecimal;
 
 public class UserManager extends Fragment {
 
+    boolean leaveOpen;
+    int dp;
+    Boolean mainIsCollapsed = true;
+    Boolean scopeIsCollapsed = true;
+
+    User testUser;
     TextView addNewItem;
     TextView nameSpace;
     TextView total;
     TextView saldo;
-    boolean leaveOpen;
+    TextView scope;
+    EditText itemName;
+    EditText itemPrice;
+    LinearLayout snack;
+    LinearLayout scopeCollapsible;
     RecyclerView mRecyclerView;
     UserManagerAdapter mAdapter;
     RecyclerView.LayoutManager mLayoutManager;
-    User testUser;
-    EditText itemName;
-    Boolean isCollapsed = true;
-    EditText itemPrice;
-    int dp;
-
+    MainActivity mainActivity;
+    View.OnClickListener defaultAction;
 
     public void refresh() {
         Bundle alreadyDone = new Bundle();
+
         alreadyDone.putSerializable("user", this.testUser);
-        alreadyDone.putBoolean("leaveOpen", !this.isCollapsed);
+        alreadyDone.putBoolean("leaveOpen", !this.mainIsCollapsed);
 
         Fragment fragment = new UserManager();
         fragment.setArguments(alreadyDone);
@@ -63,44 +76,15 @@ public class UserManager extends Fragment {
         this.testUser = (User) tempUser.getSerializable("user");
         this.leaveOpen = tempUser.getBoolean("leaveOpen");
 
+        this.mainActivity = (MainActivity) getActivity();
 
         this.dp = ((int) getResources().getDisplayMetrics().density);
 
-        return inflater.inflate(R.layout.content_user_manager, container, false);
+        return inflater.inflate(R.layout.content_manage_user, container, false);
     }
 
     @Override
     public void onViewCreated(View view, Bundle onSavedInstanceState) {
-
-        this.itemPrice = (EditText) getView().findViewById(R.id.user_manager_price);
-        this.itemPrice.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (!hasFocus) {
-                    InputMethodManager imm = (InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                } else {
-                    //revoke keyboard
-                    ((InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
-                }
-            }
-        });
-
-
-        this.itemName = (EditText) getView().findViewById(R.id.user_manager_item);
-        this.itemName.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (!hasFocus) {
-                    InputMethodManager imm = (InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                } else {
-                    //revoke keyboard
-                    ((InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
-                    itemName.requestFocus();
-                }
-            }
-        });
 
         this.mRecyclerView = (RecyclerView) getView().findViewById(R.id.user_manager_recycler_view);
 
@@ -119,40 +103,125 @@ public class UserManager extends Fragment {
 
 
         final LinearLayout collapsibleLayout = (LinearLayout) getView().findViewById(R.id.user_manager_collapsible);
-        final Animations animations = new Animations();
 
         this.addNewItem = (TextView) getView().findViewById(R.id.user_manager_collapse);
 
         this.addNewItem.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(final View v) {
 
-                if (UserManager.this.isCollapsed) {
+                if (UserManager.this.mainIsCollapsed) {
                     UserManager.this.addNewItem.setText("close");
+                    Animations.alphaAnimator(true, getView().findViewById(R.id.user_manager_add), 555).start();
+                    mainActivity.fragmentFAB.setVisibility(View.INVISIBLE);
                     collapsibleLayout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
                     int height = collapsibleLayout.getMeasuredHeight();
-                    animations.expand(collapsibleLayout, height, 0);
+                    Animations.slideAnimator(0, height, collapsibleLayout, 1111).start();
+
+                    getView().findViewById(R.id.user_manager_add).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            surveiller();
+                        }
+                    });
                     UserManager.this.itemName.requestFocus();
                 } else {
-                    animations.collapse(collapsibleLayout, 0);
+                    Animations.slideAnimator(collapsibleLayout.getMeasuredHeight(), 0, collapsibleLayout, 1111).start();
+                    mainActivity.fragmentFAB.setOnClickListener(defaultAction);
                     UserManager.this.addNewItem.setText("add new item");
                     UserManager.this.nameSpace.requestFocus();
+                    Animations.alphaAnimator(true, mainActivity.fragmentFAB, 555).start();
+                    Animations.alphaAnimator(false, getView().findViewById(R.id.user_manager_add), 555).start();
                 }
-                UserManager.this.isCollapsed = !UserManager.this.isCollapsed;
+                UserManager.this.mainIsCollapsed = !UserManager.this.mainIsCollapsed;
                 UserManager.this.addNewItem.setGravity(Gravity.CENTER);
             }
         });
 
+        this.snack = (LinearLayout) getActivity().findViewById(R.id.user_manager_snack);
 
-        Button addItem = (Button) getView().findViewById(R.id.user_manager_add);
-        addItem.setOnClickListener(new View.OnClickListener() {
+        DrawerLayout.DrawerListener drawerListener = new DrawerLayout.DrawerListener() {
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState) {
+                if (snack != null) {
+                    mainActivity.fragmentFAB.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.calc));
+                    if (snack.getMeasuredHeight() > 1) Animations.collapse(snack, 0);
+                }
+            }
+        };
+
+        mainActivity.drawer.addDrawerListener(drawerListener);
+
+        this.mainActivity.fragmentFAB.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.calc));
+        this.defaultAction = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                surveiller();
+                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 200 * dp);
+                if (snack.getLayoutParams().height < 5) {
+                    mainActivity.fragmentFAB.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.down));
+                    Animations.slideAnimator(0, 200 * dp, snack, 666).start();
+                    params.gravity = Gravity.BOTTOM;
+                    snack.setLayoutParams(params);
+                } else {
+                    mainActivity.fragmentFAB.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.calc));
+                    Animations.collapse(snack, 0);
+                    params.gravity = Gravity.BOTTOM;
+                    snack.setLayoutParams(params);
+                }
+            }
+        };
+        this.mainActivity.fragmentFAB.setOnClickListener(this.defaultAction);
+
+
+        this.itemPrice = (EditText) getView().findViewById(R.id.user_manager_price);
+        this.itemPrice.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+
+                    System.out.println("why price");
+                } else {
+                    //revoke keyboard
+                    ((InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+                }
+            }
+        });
+
+
+        this.itemName = (EditText) getView().findViewById(R.id.user_manager_item);
+        this.itemName.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    InputMethodManager imm = (InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    mainActivity.fragmentFAB.setOnClickListener(defaultAction);
+                    System.out.println("why price");
+                } else {
+                    //revoke keyboard
+                    ((InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+                    itemName.requestFocus();
+                }
             }
         });
         this.initialize();
 
+        Calligrapher calligrapher = new Calligrapher(getContext());
+        calligrapher.setFont(view, getResources().getString(R.string.font_fu));
     }
 
     @Override
@@ -166,17 +235,49 @@ public class UserManager extends Fragment {
         this.nameSpace = (TextView) getView().findViewById(R.id.user_manager_name_space);
         this.saldo = (TextView) getView().findViewById(R.id.user_manager_saldo);
         this.total = (TextView) getView().findViewById(R.id.user_manager_total);
+        this.scope = (TextView) getView().findViewById(R.id.user_manager_scope);
+        this.scopeCollapsible = (LinearLayout) getView().findViewById(R.id.user_manager_scope_collapse_container);
+
+        for (User u : ((MainActivity) getActivity()).userList) {
+            LinearLayout holder = new LinearLayout(getContext());
+            TextView name = new TextView(getContext());
+            name.setText(u.getName());
+            CheckBox checker = new CheckBox(getContext());
+            holder.addView(checker);
+            holder.addView(name);
+            this.scopeCollapsible.addView(holder);
+            name.getLayoutParams().height = 45 * dp;
+        }
+
 
         this.saldo.setText(String.valueOf(0));
         this.nameSpace.setText(this.testUser.getName());
         this.total.setText(String.valueOf(this.testUser.getTotalDispense()));
+
+        this.scope.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ScrollView collapser = (ScrollView) getView().findViewById(R.id.user_manager_scope_collapse);
+                scopeCollapsible.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                InputMethodManager imm = (InputMethodManager) getView().getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                if (scopeIsCollapsed) {
+                    Animations.slideAnimator(0, scopeCollapsible.getMeasuredHeight(), collapser, 555).start();
+                    System.out.println("called");
+                    scopeIsCollapsed = false;
+                } else {
+                    Animations.slideAnimator(scopeCollapsible.getMeasuredHeight(), 0, collapser, 555).start();
+                    scopeIsCollapsed = true;
+                }
+            }
+        });
 
         if (this.leaveOpen) {
             LinearLayout collapsibleLayout = (LinearLayout) getView().findViewById(R.id.user_manager_collapsible);
             collapsibleLayout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
             int height = collapsibleLayout.getMeasuredHeight();
             collapsibleLayout.getLayoutParams().height = height;
-            this.isCollapsed = false;
+            this.mainIsCollapsed = false;
             this.addNewItem.setText("close");
         }
         this.manageTheSaldo();
@@ -199,8 +300,11 @@ public class UserManager extends Fragment {
         BigDecimal total = this.testUser.getTotalDispense();
         total.setScale(2, BigDecimal.ROUND_HALF_EVEN);
 
-        if (saldo.toBigInteger().doubleValue() > 0) this.saldo.setTextColor(Color.RED);
-        else this.saldo.setTextColor(Color.GREEN);
+        if (saldo.toBigInteger().doubleValue() > 0) {
+            this.saldo.setTextColor(Color.parseColor("#ff5252"));
+        } else {
+            this.saldo.setTextColor(Color.parseColor("#76ff03"));
+        }
 
         this.total.setText((total.setScale(2, BigDecimal.ROUND_HALF_EVEN)).toString());
         this.saldo.setText((saldo.setScale(2, BigDecimal.ROUND_HALF_EVEN)).multiply(new BigDecimal(-1)).toString());
@@ -210,7 +314,7 @@ public class UserManager extends Fragment {
     public void onStop() {
         Bundle sendBack = new Bundle();
         sendBack.putSerializable("user", this.testUser);
-
+        this.snack = null;
         super.onStop();
     }
 

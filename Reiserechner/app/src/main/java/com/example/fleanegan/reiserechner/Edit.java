@@ -5,9 +5,14 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.MultiAutoCompleteTextView;
+
+import me.anwarshahriar.calligrapher.Calligrapher;
 
 /**
  * Created by fleanegan on 22.03.17.
@@ -45,7 +50,16 @@ public class Edit extends AppCompatActivity {
                 finish();
             }
         });
+
+        Animation fadeIn = new AlphaAnimation(0, 1);
+        fadeIn.setInterpolator(new DecelerateInterpolator());
+        fadeIn.setDuration(500);
+        this.fabAccept.setAnimation(fadeIn);
+
         this.fabAccept.requestFocus();
+
+        Calligrapher calligrapher = new Calligrapher(this);
+        calligrapher.setFont(this, getResources().getString(R.string.font_fu), true);
     }
 
     @Override

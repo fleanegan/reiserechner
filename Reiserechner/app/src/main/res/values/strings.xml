@@ -5,4 +5,6 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="home"><u>Home</u></string>
     <string name="action_settings">Settings</string>
+    <string name="font">fonts/JimNightshade-Regular.ttf</string>
+    <string name="font_fu">fonts/Lato-Regular.ttf</string>
 </resources>

@@ -3,6 +3,7 @@ package com.example.fleanegan.reiserechner;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -12,11 +13,11 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
+import android.view.animation.AccelerateInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -25,12 +26,20 @@ import android.widget.TextView;
 import java.io.File;
 import java.util.ArrayList;
 
+import me.anwarshahriar.calligrapher.Calligrapher;
+
 import static com.example.fleanegan.reiserechner.R.string.navigation_drawer_open;
 
 public class MainActivity extends AppCompatActivity {
 
     int remember = -1;
+    boolean weird = false;
     boolean intialized = false;
+    float screenWidth;
+    float pushHomeInitPos;
+    float rightSide;
+    float screenHeight;
+    float drawerSlideOffset;
     Integer userId = 0;
     Integer dp;
     String serFileName = "new project.ser";
@@ -40,14 +49,12 @@ public class MainActivity extends AppCompatActivity {
     View dummyView;
     DrawerLayout drawer;
     NavigationView navigationView;
-    Button cancelUserAdd;
+    FloatingActionButton pushHome;
+    FloatingActionButton fragmentFAB;
     TextView saferDeletionTextView = null;
-    LinearLayout addUserLayout;
-    LinearLayout addUserInterfaceLayout;
     LinearLayout testNavMenuAlternative;
     IOManager ioManager = new IOManager(this);
-
-    ActionBarDrawerToggle mDrawerToggle;
+    ActionBarDrawerToggle toggle;
     Toolbar toolbar;
 
     @Override
@@ -62,28 +69,53 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         this.toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(this.serFileName.substring(0, this.serFileName.toCharArray().length - 4));
+        toolbar.setTitle(this.serFileName.substring(0, this.serFileName.toCharArray().length - 4));
 
         LinearLayout buttonBox = (LinearLayout) findViewById(R.id.button_container);
         buttonBox.removeAllViews();
 
         this.dp = ((int) getResources().getDisplayMetrics().density);
 
+        DisplayMetrics displaymetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+        this.screenWidth = displaymetrics.widthPixels;
+        this.screenHeight = displaymetrics.heightPixels;
+
         this.drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        this.pushHomeInitPos = 200 * dp;
+        if (fragmentFAB != null)
+            fragmentFAB.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        this.toggle = new ActionBarDrawerToggle(
                 this, this.drawer, toolbar, navigation_drawer_open, R.string.navigation_drawer_close) {
             @Override
-            public void onDrawerClosed(View view) {
-                MainActivity.this.addUserLayout.getLayoutParams().height = 80 * dp;
-                MainActivity.this.addUserInterfaceLayout.getLayoutParams().height = 1;
-                //weirdest bug ever. If bgcolor not set -> bar disapears
-                MainActivity.this.addUserInterfaceLayout.setBackgroundColor(Color.TRANSPARENT);
+            public void onDrawerOpened(View view) {
                 neutralize();
             }
 
             @Override
-            public void onDrawerOpened(View view) {
-                addUserInterfaceLayout.requestFocus();
+            public void onDrawerClosed(View view) {
+                //pushHome.setAlpha(1f);
+                //pushHome.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState) {
+                if (DrawerLayout.STATE_IDLE == newState && drawerSlideOffset == 1)
+                    if (fragmentFAB.getTranslationX() >= -65 * dp && fragmentFAB.getTranslationX() < 30 * dp) {
+                    }
+            }
+
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+                pushHome.setVisibility(View.VISIBLE);
+                if (slideOffset > 0.9f) {
+                    pushHome.setAlpha(1f - new AccelerateInterpolator(0.3f).getInterpolation(Math.abs((slideOffset - 1) * 10)));
+                    drawerSlideOffset = 1;
+                } else if (slideOffset < 0.8f) {
+                    pushHome.setAlpha(0f);
+                    if (fragmentFAB != null)
+                        fragmentFAB.setX((rightSide - (rightSide - pushHomeInitPos - pushHome.getWidth() / 2 - (int) getResources().getDimension(R.dimen.fab_margin)) * (slideOffset) * 1f - (int) getResources().getDimension(R.dimen.fab_margin) - fragmentFAB.getWidth()));
+                }
             }
         };
         this.drawer.setDrawerListener(toggle);
@@ -101,19 +133,8 @@ public class MainActivity extends AppCompatActivity {
 
         this.ioManager.getFiles();
 
-        this.mDrawerToggle = new ActionBarDrawerToggle(this, drawer, this.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
-
-            @Override
-            public void onDrawerClosed(View drawerView) {
-                super.onDrawerClosed(drawerView);
-            }
-
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-            }
-        };
-        this.drawer.setDrawerListener(this.mDrawerToggle);
+        Calligrapher calligrapher = new Calligrapher(this);
+        calligrapher.setFont(this, getResources().getString(R.string.font_fu), true);
     }
 
 
@@ -127,27 +148,13 @@ public class MainActivity extends AppCompatActivity {
 
 
     /**
-     * layout reasons
-     *
-     * @return status bar height
-     */
-    public int getStatusBarHeight() {
-        int result = 0;
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            result = getResources().getDimensionPixelSize(resourceId);
-        }
-        return result;
-    }
-
-
-    /**
      * prepares globally used views and other stuff.
      * Mainly occupied in order to get the navbar working.
      */
     protected void initialize() {
-        final TextView pushHome = (TextView) findViewById(R.id.nav_bar_push_home);
-        pushHome.setOnClickListener(new View.OnClickListener() {
+        this.pushHome = (FloatingActionButton) findViewById(R.id.nav_push_home);
+        this.rightSide = this.screenWidth;
+        this.pushHome.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 pushUserToFragment(-1);
@@ -157,29 +164,6 @@ public class MainActivity extends AppCompatActivity {
         NavigationView nav = (NavigationView) findViewById(R.id.nav_view);
         LinearLayout header = (LinearLayout) nav.findViewById(R.id.test_nav_menu_alternative);
         this.headerView = header.getChildAt(0);
-        this.addUserInterfaceLayout = (LinearLayout) this.headerView.findViewById(R.id.add_user_interface);
-        //locate the header
-        this.addUserLayout = (LinearLayout) headerView.findViewById(R.id.add_user);
-        this.addUserLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MainActivity.this.openManageUserAddDialog();
-                neutralize();
-            }
-        });
-
-        TextView placeHeader = (TextView) this.headerView.findViewById(R.id.adapt_to_status_bar);
-        placeHeader.getLayoutParams().height = this.getStatusBarHeight();
-        placeHeader.setHeight(this.getStatusBarHeight());
-
-        //manage the user_add_interface
-        this.cancelUserAdd = (Button) this.headerView.findViewById(R.id.add_user_interface_cancel);
-        this.cancelUserAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MainActivity.this.closeManageUserAddDialog();
-            }
-        });
 
         Button confirmUserAdd = (Button) this.headerView.findViewById(R.id.add_user_interface_confirm);
         confirmUserAdd.setOnClickListener(new View.OnClickListener() {
@@ -193,56 +177,14 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * wrapper for managing a clean user-adding-experience - closer
-     */
-    private void closeManageUserAddDialog() {
-        //collapses keyboard
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(MainActivity.this.addUserInterfaceLayout.getWindowToken(), 0);
-        //switches back
-        Animations animator = new Animations();
-        animator.fade(MainActivity.this.addUserInterfaceLayout, "out");
-        animator.expand(MainActivity.this.addUserLayout, 80, 0);
-        MainActivity.this.addUserInterfaceLayout.getLayoutParams().height = 1;
-        MainActivity.this.addUserLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                MainActivity.this.addUserLayout.measure(View.MeasureSpec.EXACTLY, View.MeasureSpec.EXACTLY);
-            }
-        });
-    }
-
-    /**
-     * wrapper for managing a clean user-adding-experience - opener
-     */
-    public void openManageUserAddDialog() {
-        Animations animator = new Animations();
-        animator.collapse(MainActivity.this.addUserLayout, 0);
-        this.addUserInterfaceLayout = (LinearLayout) this.headerView.findViewById(R.id.add_user_interface);
-        this.addUserInterfaceLayout.getLayoutParams().height = findViewById(R.id.nav_boss).getMeasuredHeight();
-        animator.fade(this.addUserInterfaceLayout, "in");
-        EditText editText = (EditText) this.headerView.findViewById(R.id.add_user_interface_input);
-
-
-        //revoke keyboard
-        editText.requestFocus();
-        InputMethodManager inputMethodManager =
-                (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        inputMethodManager.toggleSoftInputFromWindow(
-                editText.getApplicationWindowToken(),
-                InputMethodManager.SHOW_FORCED, 0);
-    }
-
 
     /**
      * declares the behavior of the app when the back button is tapped-
-     * default is toggle nav drawer. TODO: Figure out if customers appreciate this behavior
+     * default is toggle nav drawer.
      */
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        System.out.println("drawertest " + this.remember);
         if (this.remember == -2) {
             this.remember = -1;
             this.pushUserToFragment(-1);
@@ -277,28 +219,19 @@ public class MainActivity extends AppCompatActivity {
             final TextView testName = (TextView) myView.findViewById(R.id.test_nav_menu_alternative_name);
             if (this.testNavMenuAlternative == null) {
                 this.testNavMenuAlternative = (LinearLayout) this.navigationView.findViewById(R.id.test_nav_menu_alternative_scrollable);
-                this.dummyView = navigationView.findViewById(R.id.dummy);
-                this.dummyView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        neutralize();
-                    }
-                });
             }
-
             //setting values to the item-specific view
             testName.setText(name);
             testName.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     LinearLayout test = (LinearLayout) myView.getParent();
-                    pushUserToFragment(test.indexOfChild(myView));
-                    Log.d("indexer", String.valueOf(test.indexOfChild(myView)));
                     MainActivity.this.drawer.closeDrawer(Gravity.LEFT);
+                    pushUserToFragment(test.indexOfChild(myView));
                 }
             });
 
-            final TextView testRemove = (TextView) myView.findViewById(R.id.test_nav_menu_alternative_remove);
+            final Button testRemove = (Button) myView.findViewById(R.id.test_nav_menu_alternative_remove);
             testRemove.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -307,6 +240,15 @@ public class MainActivity extends AppCompatActivity {
                     removeUser(id, testRemove);
                 }
             });
+
+            myView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    if (hasFocus) System.out.println(" 01remove has focus");
+                    else System.out.println(" 02remove has lost focus");
+                }
+            });
+
             this.testNavMenuAlternative.addView(myView);
             if (!alreadyAdded) {
                 this.userList.add(new User(name, this.userId));
@@ -329,9 +271,8 @@ public class MainActivity extends AppCompatActivity {
      * uses a double-tap-mechanism in order to prevent the customer
      * to accidentally delete a user.
      *
-     * @param id: position of user-view in @see this.testNavMenuAlternative
+     * @param id:       position of user-view in @see this.testNavMenuAlternative
      * @param textView: zh, needed to enable double-tap-security
-     *
      */
     public void removeUser(int id, TextView textView) {
         if (!textView.equals(this.saferDeletionTextView)) {
@@ -363,12 +304,10 @@ public class MainActivity extends AppCompatActivity {
         neutralize();
         Fragment fragment;
         if (id >= 0) {
-            getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             alreadyDone.putSerializable("user", this.userList.get(id));
             alreadyDone.putBoolean("leaveOpen", false);
             fragment = new UserManager();
-        } else if(id == -1) {
-            getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        } else if (id == -1) {
             fragment = new HomeManager();
             this.ioManager.serialize(this.saveTo);
         } else {
@@ -377,39 +316,33 @@ public class MainActivity extends AppCompatActivity {
 
         this.remember = id;
 
+        if (this.weird) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            this.toggle.syncState();
+            //this.toggle.syncState();
+            this.toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    drawer.openDrawer(GravityCompat.START);
+                }
+            });
+            this.weird = false;
+        }
+
+        if (this.fragmentFAB != null) {
+            this.fragmentFAB.setVisibility(View.VISIBLE);
+        }
+        this.drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+
+
+
         LinearLayout buttonBox = (LinearLayout) findViewById(R.id.button_container);
         buttonBox.removeAllViewsInLayout();
         fragment.setArguments(alreadyDone);
         final FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.add(R.id.button_container, fragment);
-        transaction.addToBackStack(null);
         transaction.commit();
-
-        getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
-            @Override
-            public void onBackStackChanged() {
-                if (getSupportFragmentManager().getBackStackEntryCount() > 1) {
-                    getSupportActionBar().setDisplayHomeAsUpEnabled(true); // show back button
-                    toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onBackPressed();
-                        }
-                    });
-                } else {
-                    //show hamburger
-                    getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-                    mDrawerToggle.syncState();
-                    toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            drawer.openDrawer(GravityCompat.START);
-                        }
-                    });
-                }
-            }
-        });
     }
 
 

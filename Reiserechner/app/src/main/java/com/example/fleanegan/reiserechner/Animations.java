@@ -1,9 +1,8 @@
 package com.example.fleanegan.reiserechner;
 
-import android.content.res.Resources;
+import android.animation.ValueAnimator;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.AlphaAnimation;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.LinearLayout;
@@ -21,6 +20,7 @@ public class Animations {
             @Override
             protected void applyTransformation(float interpolatedTime, Transformation t) {
                 if (interpolatedTime == 1) {
+                    v.setVisibility(View.GONE);
                 } else {
                     v.getLayoutParams().height = initialHeight - (int) ((initialHeight - f) * interpolatedTime);
                     v.requestLayout();
@@ -66,26 +66,36 @@ public class Animations {
         v.startAnimation(a);
     }
 
-
-    public static void fade(final View v, String inOrOut) throws Resources.NotFoundException {
-        if (inOrOut == "out") {
-            Animation fadeOut = new AlphaAnimation(1, 0);
-            fadeOut.setInterpolator(new AccelerateInterpolator());
-            fadeOut.setDuration(1000);
-            v.setAnimation(fadeOut);
-            v.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                }
-            }, 500);
-            v.setVisibility(View.INVISIBLE);
-        } else {
-            v.setVisibility(View.VISIBLE);
-            Animation fadeIn = new AlphaAnimation(0, 1);
-            fadeIn.setInterpolator(new AccelerateInterpolator());
-            fadeIn.setDuration(100);
-            v.setAnimation(fadeIn);
-        }
+    public static ValueAnimator slideAnimator(int start, int end, final View view, int duration) {
+        view.setVisibility(View.VISIBLE);
+        ValueAnimator animator = ValueAnimator.ofInt(start, end);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                int val = (Integer) valueAnimator.getAnimatedValue();
+                ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+                layoutParams.height = val;
+                view.setLayoutParams(layoutParams);
+            }
+        });
+        animator.setDuration(duration);
+        return animator;
     }
 
+    public static ValueAnimator alphaAnimator(boolean isFadingIn, final View view, int duration) {
+        view.setVisibility(View.VISIBLE);
+        ValueAnimator animator;
+        if (isFadingIn) animator = ValueAnimator.ofInt(0, 1);
+        else animator = ValueAnimator.ofInt(1, 0);
+
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                int val = (Integer) valueAnimator.getAnimatedValue();
+                view.setAlpha(val);
+            }
+        });
+        animator.setDuration(duration);
+        return animator;
+    }
 }

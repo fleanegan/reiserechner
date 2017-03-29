@@ -1,10 +1,12 @@
 package com.example.fleanegan.reiserechner;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +15,8 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.util.ArrayList;
+
+import me.anwarshahriar.calligrapher.Calligrapher;
 
 /**
  * Created by fleanegan on 20.03.17.
@@ -25,8 +29,8 @@ public class ProjectManager extends Fragment {
     MainActivity mainActivity;
     IOManager ioManager;
     LinearLayout temp;
+    TextView temp2;
     ArrayList<File> fileList;
-    FloatingActionButton fab;
 
 
     @Override
@@ -40,25 +44,36 @@ public class ProjectManager extends Fragment {
 
         this.mainActivity.remember = -2;
 
-        return inflater.inflate(R.layout.content_project_manager, container, false);
+        return inflater.inflate(R.layout.content_manager_projects, container, false);
 
     }
-
 
 
     @Override
     public void onViewCreated(View view, Bundle onSavedInstanceState) {
         this.fillList();
-        this.fab = (FloatingActionButton) getActivity().findViewById(R.id.project_manager_fab);
-        this.fab.setOnClickListener(new View.OnClickListener() {
+        this.mainActivity.fragmentFAB.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.add));
+        this.mainActivity.fragmentFAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                System.out.println("fab called");
                 Intent newActivity = new Intent(getActivity(), EditProject.class);
                 newActivity.putExtra("name", "");
                 newActivity.putExtra("isNew", true);
                 newActivity.putExtra("ser", new Serializer());
                 startActivityForResult(newActivity, 666);
+            }
+        });
+        Calligrapher calligrapher = new Calligrapher(getContext());
+        calligrapher.setFont(view, getResources().getString(R.string.font_fu));
+
+        this.mainActivity.drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+
+        this.mainActivity.getSupportActionBar().setDisplayHomeAsUpEnabled(true); // show back button
+        this.mainActivity.weird = true;
+        this.mainActivity.toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mainActivity.onBackPressed();
             }
         });
     }
@@ -77,16 +92,18 @@ public class ProjectManager extends Fragment {
             projectTotal.setText(String.valueOf(serializer.getSaveTheAmount()));
             this.scrollContainer.addView(entry);
             //expand the button
-            entry.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-            final int collapsedHeight = entry.getMeasuredHeight();
-            entry.getLayoutParams().height = collapsedHeight;
+
             final LinearLayout lMenu = (LinearLayout) LayoutInflater.from(this.getContext()).inflate(R.layout.project_menu, null);
+
+            final LinearLayout container = (LinearLayout) entry.findViewById(R.id.home_day_container);
+            container.addView(lMenu);
 
             final TextView schraegStrich = (TextView) entry.findViewById(R.id.schraegStrich);
             schraegStrich.setText(".");
             schraegStrich.setTextColor(Color.TRANSPARENT);
 
-            this.temp = entry;
+            this.temp = container;
+            this.temp2 = schraegStrich;
 
             TextView menuDelete = (TextView) lMenu.findViewById(R.id.project_manager_menu_delete);
             menuDelete.setOnClickListener(new View.OnClickListener() {
@@ -119,24 +136,27 @@ public class ProjectManager extends Fragment {
             entry.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Animations animations = new Animations();
-                    if (!temp.equals(entry)) {
-                        animations.collapse(temp, collapsedHeight);
+                    container.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                    if (!temp.equals(container)) {
+                        Animations.collapse(temp, 0);
+                        temp2.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#bdbdbd")));
                         schraegStrich.setText(".");
-                        temp = entry;
+                        temp = container;
+                        temp2 = schraegStrich;
                     }
                     if (schraegStrich.getText().toString().equals(".")) {
-                        entry.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                        int height = entry.getMeasuredHeight();
-                        animations.expand(entry, height, collapsedHeight);
                         schraegStrich.setText("");
+                        Animations.slideAnimator(0, container.getMeasuredHeight(), container, 500).start();
+                        schraegStrich.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FFFF8A65")));
+
                     } else {
-                        animations.collapse(entry, collapsedHeight);
+                        System.out.println("this is insanity handler: " + temp.getMeasuredHeight());
+                        Animations.slideAnimator(container.getMeasuredHeight(), 0, container, 500).start();
                         schraegStrich.setText(".");
+                        schraegStrich.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#bdbdbd")));
                     }
                 }
             });
-            entry.addView(lMenu);
         }
 
     }
@@ -144,7 +164,6 @@ public class ProjectManager extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode >= 0 && resultCode != 0) {
-            System.out.println(String.valueOf(resultCode));
             boolean isToBeLoaded = (boolean) data.getExtras().get("load");
             String name = data.getExtras().get("name") + ".ser";
             System.out.println("the project " + name + " will be loaded: " + isToBeLoaded);
