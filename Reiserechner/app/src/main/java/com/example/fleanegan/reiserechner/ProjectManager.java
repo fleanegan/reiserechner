@@ -1,15 +1,16 @@
 package com.example.fleanegan.reiserechner;
 
+import android.animation.ObjectAnimator;
 import android.content.Intent;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -25,12 +26,12 @@ import me.anwarshahriar.calligrapher.Calligrapher;
 public class ProjectManager extends Fragment {
 
     int dp;
+    boolean isScrolled = false;
     LinearLayout scrollContainer;
     MainActivity mainActivity;
     IOManager ioManager;
-    LinearLayout temp;
-    TextView temp2;
     ArrayList<File> fileList;
+    HorizontalScrollView temp;
 
 
     @Override
@@ -84,26 +85,51 @@ public class ProjectManager extends Fragment {
         for (final File f : this.fileList) {
             //get the data
             final Serializer serializer = ioManager.deserialize(f, true);
-            final LinearLayout entry = (LinearLayout) getActivity().getLayoutInflater().inflate(R.layout.home_day, null);
-            TextView projectName = (TextView) entry.findViewById(R.id.home_header);
-            TextView projectTotal = (TextView) entry.findViewById(R.id.home_header_sub_total);
+            final HorizontalScrollView entry = (HorizontalScrollView) LayoutInflater.from(this.getContext()).inflate(R.layout.project_menu, null);
+
+            final LinearLayout lMenu = (LinearLayout) entry.findViewById(R.id.project_manager_menu_container);
+            lMenu.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+            final int lMenuSize = lMenu.getMeasuredWidth();
+
+            TextView projectName = (TextView) entry.findViewById(R.id.project_manager_menu_label);
             //inject the data
             projectName.setText(f.getName().substring(0, f.getName().toCharArray().length - 4));
-            projectTotal.setText(String.valueOf(serializer.getSaveTheAmount()));
+            projectName.getLayoutParams().width = Math.round(this.mainActivity.screenWidth);
+            projectName.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (temp != null)
+                        ObjectAnimator.ofInt(temp, "scrollX", 0).setDuration(1111).start();
+                    temp = entry;
+                    if (!isScrolled) {
+                        ObjectAnimator.ofInt(entry, "scrollX", lMenuSize).setDuration(1111).start();
+                        isScrolled = true;
+                    } else {
+                        ObjectAnimator.ofInt(entry, "scrollX", 0).setDuration(1111).start();
+                        isScrolled = false;
+                    }
+                }
+            });
             this.scrollContainer.addView(entry);
             //expand the button
 
-            final LinearLayout lMenu = (LinearLayout) LayoutInflater.from(this.getContext()).inflate(R.layout.project_menu, null);
 
-            final LinearLayout container = (LinearLayout) entry.findViewById(R.id.home_day_container);
-            container.addView(lMenu);
+            entry.setOnTouchListener(new View.OnTouchListener() {
+                public boolean onTouch(View view, MotionEvent event) {
+                    if (event.getAction() == MotionEvent.ACTION_UP) {
+                        int scrollX = entry.getScrollX();
+                        if (scrollX != 0) {
+                            if (!entry.equals(temp)) {
+                                ObjectAnimator.ofInt(temp, "scrollX", 0).setDuration(1111).start();
+                                isScrolled = true;
+                                temp = entry;
+                            }
+                        }
+                    }
+                    return false;
+                }
+            });
 
-            final TextView schraegStrich = (TextView) entry.findViewById(R.id.schraegStrich);
-            schraegStrich.setText(".");
-            schraegStrich.setTextColor(Color.TRANSPARENT);
-
-            this.temp = container;
-            this.temp2 = schraegStrich;
 
             TextView menuDelete = (TextView) lMenu.findViewById(R.id.project_manager_menu_delete);
             menuDelete.setOnClickListener(new View.OnClickListener() {
@@ -133,30 +159,6 @@ public class ProjectManager extends Fragment {
                 }
             });
 
-            entry.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    container.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                    if (!temp.equals(container)) {
-                        Animations.collapse(temp, 0);
-                        temp2.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#bdbdbd")));
-                        schraegStrich.setText(".");
-                        temp = container;
-                        temp2 = schraegStrich;
-                    }
-                    if (schraegStrich.getText().toString().equals(".")) {
-                        schraegStrich.setText("");
-                        Animations.slideAnimator(0, container.getMeasuredHeight(), container, 500).start();
-                        schraegStrich.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FFFF8A65")));
-
-                    } else {
-                        System.out.println("this is insanity handler: " + temp.getMeasuredHeight());
-                        Animations.slideAnimator(container.getMeasuredHeight(), 0, container, 500).start();
-                        schraegStrich.setText(".");
-                        schraegStrich.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#bdbdbd")));
-                    }
-                }
-            });
         }
 
     }

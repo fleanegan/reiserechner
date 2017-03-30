@@ -66,20 +66,20 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         BigDecimal subTotalValue = new BigDecimal(0);
 
         final LinearLayout container = (LinearLayout) holder.homeLayout.findViewById(R.id.home_day_container);
-        LinearLayout collapser = (LinearLayout) holder.homeLayout.findViewById(R.id.home_collapser);
+        final LinearLayout collapser = (LinearLayout) holder.homeLayout.findViewById(R.id.home_collapser);
         final TextView schraegStrich = (TextView) collapser.findViewById(R.id.schraegStrich);
         schraegStrich.setText("\\");
         collapser.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Animations animations = new Animations();
+                container.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                int height = container.getMeasuredHeight();
                 if (schraegStrich.getText().toString().equals("\\")) {
                     container.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-                    int height = container.getMeasuredHeight();
-                    animations.expand(container, height, 0);
+                    Animations.slideAnimator(0, height, container, 555).start();
                     schraegStrich.setText("/");
                 } else {
-                    animations.collapse(container, 0);
+                    Animations.slideAnimator(height, 0, container, 555).start();
                     schraegStrich.setText("\\");
                 }
             }
