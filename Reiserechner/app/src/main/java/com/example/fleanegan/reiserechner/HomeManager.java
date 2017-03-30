@@ -95,8 +95,10 @@ public class HomeManager extends Fragment {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
+                    if (((MainActivity) getActivity()).remember != -2) {
                     drawerLayout.openDrawer(GravityCompat.START);
-                    ((MainActivity) getActivity()).intialized = true;
+                        ((MainActivity) getActivity()).intialized = true;
+                    }
                 }
             }, 1000);
         }

@@ -1,34 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:id="@+id/project_manager_menu_delete"
-        android:text="Delete project"
-        android:textColor="@color/colorPrimary"
-        android:textSize="18sp" />
+        android:layout_width="30dp"
+        android:background="#eeeeee"
+        android:paddingLeft="16dp"
+        android:textAllCaps="true"
+        android:gravity="center_vertical"
+        android:layout_height="65sp"
+        android:id="@+id/project_manager_menu_label" />
 
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="#E0E0E0"
+                android:id="@+id/project_manager_menu_container">
+
+                <Button
+                    android:id="@+id/project_manager_menu_delete"
+                    android:layout_width="50sp"
+                    android:background="@drawable/delete"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:textColor="#e0e0e0e0"
+                    android:layout_height="50sp"
+                    android:layout_margin="8dp"
+                    android:textSize="18sp" />
+
+                <Button
+                    android:id="@+id/project_manager_menu_rename"
+                    android:layout_width="50sp"
+                    android:background="@drawable/edit"
+                    android:layout_height="50sp"
+                    android:layout_margin="8dp"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:textColor="#e0e0e0e0"
+                    android:textSize="18sp" />
+
+                <Button
+                    android:id="@+id/project_manager_menu_load"
+                    android:layout_width="50sp"
+                    android:background="@drawable/load"
+                    android:layout_height="50sp"
+                    android:layout_margin="8dp"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:textColor="#e0e0e0e0"
+                    android:textSize="18sp" />
+
+
+            </LinearLayout>
+        </LinearLayout>
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:id="@+id/project_manager_menu_rename"
-        android:text="Rename"
-        android:textColor="@color/colorPrimary"
-        android:textSize="18sp" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:id="@+id/project_manager_menu_load"
-        android:text="Load project"
-        android:textColor="@color/colorPrimary"
-        android:textSize="18sp" />
-
+        android:layout_height="1dp"
+        android:background="#e0e0e0" />
 </LinearLayout>
+</HorizontalScrollView>

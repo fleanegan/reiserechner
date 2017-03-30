@@ -70,7 +70,7 @@ public class EditProject extends Edit {
 
     @Override
     public void finish() {
-        if (this.approved) {
+        if (this.approved && !this.name.equals("")) {
             name = projectName.getText().toString();
             Intent dataToSendBack = new Intent();
             dataToSendBack.putExtra("load", isToBeLoaded);
